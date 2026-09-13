@@ -1,0 +1,37 @@
+{
+  "app_name": "Sidd's Order Dashboard",
+  "version": "1.4.0",
+  "debug": true,
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "workers": 8
+  },
+  "database": {
+    "engine": "postgres",
+    "host": "db.internal",
+    "port": 5432,
+    "pool_size": 10
+  },
+  "features": {
+    "dark_mode": true,
+    "export_csv": true,
+    "beta_charts": true
+  },
+  "allowed_regions": [
+    "EU",
+    "AS",
+    "US"
+  ],
+  "admins": [
+    {
+      "name": "Sidd",
+      "email": "sidd@example.com"
+    },
+    {
+      "name": "Ana",
+      "email": "ana@example.com"
+    }
+  ],
+  "last_updated": "2026-09-13"
+}

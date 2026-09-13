@@ -1,0 +1,19 @@
+SERVER LOG ANALYSIS
+==================================================
+Source file : server.log
+Total lines : 21
+
+Lines by level:
+  ERROR     5  (24%)  #####
+  INFO     13  (62%)  #############
+  WARN      3  (14%)  ###
+
+Distinct users seen: 3
+  ana, marco, sidd
+
+Errors (5):
+  08:19:10 Payment gateway timeout after 30000ms
+  08:20:02 Payment gateway timeout after 30000ms
+  08:20:33 Order 1003 failed permanently
+  09:02:31 Database connection lost
+  10:01:19 Unhandled exception in /api/report

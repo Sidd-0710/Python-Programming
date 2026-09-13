@@ -1,0 +1,21 @@
+2024-05-01 08:00:12 INFO  Server started on port 8080
+2024-05-01 08:00:13 INFO  Database connection established
+2024-05-01 08:14:02 INFO  User ana logged in from 10.0.0.14
+2024-05-01 08:15:44 INFO  GET /api/orders 200 43ms
+2024-05-01 08:16:01 WARN  Slow query: SELECT * FROM orders took 1840ms
+2024-05-01 08:17:23 INFO  User sidd logged in from 10.0.0.22
+2024-05-01 08:19:10 ERROR Payment gateway timeout after 30000ms
+2024-05-01 08:19:41 INFO  Retrying payment for order 1003
+2024-05-01 08:20:02 ERROR Payment gateway timeout after 30000ms
+2024-05-01 08:20:33 ERROR Order 1003 failed permanently
+2024-05-01 08:22:15 INFO  GET /api/products 200 12ms
+2024-05-01 08:31:09 WARN  Disk usage at 87%
+2024-05-01 08:45:52 INFO  User marco logged in from 192.168.1.5
+2024-05-01 09:02:31 ERROR Database connection lost
+2024-05-01 09:02:35 INFO  Database reconnected after 4s
+2024-05-01 09:14:18 INFO  GET /api/orders 200 38ms
+2024-05-01 09:30:00 WARN  Disk usage at 91%
+2024-05-01 09:44:27 INFO  User ana logged out
+2024-05-01 10:01:19 ERROR Unhandled exception in /api/report
+2024-05-01 10:15:00 INFO  Scheduled backup started
+2024-05-01 10:18:44 INFO  Scheduled backup completed 2.4GB

@@ -1,0 +1,10 @@
+SALES ANALYSIS SUMMARY
+==============================================
+Period          : 2024-01-15 to 2024-03-30
+Orders          : 15 (11 paid)
+Revenue         : 1,304.95
+Profit          : 683.45 (52.4% margin)
+Average order   : 118.63
+Best region     : Widget
+Best month      : 2024-03
+Distinct buyers : 6
