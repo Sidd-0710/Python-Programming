@@ -22,7 +22,8 @@ For every file:
 3. **Break** it. Change a number, delete a quote, misspell a name. Read the
    error. This is the step people skip and it's the most valuable one.
 4. **Do the exercises** at the bottom. Write the code yourself.
-5. **Then** check the SOLUTIONS section at the very end of each file.
+5. **Then** check the SOLUTIONS section at the very end of each file. Every
+   lesson has one — worked answers with explanations, not just code.
 
 Don't comment out code after you finish a file. Leave it runnable so you can
 come back and tinker.
@@ -86,10 +87,10 @@ come back and tinker.
 
 | # | File | You'll learn |
 |---|------|--------------|
-| 21 | `21_http_and_apis.py` | HTTP, status codes, retries with backoff, rate limits, API keys from the environment |
-| 22 | `22_claude_api.py` | The Messages API, models and pricing, streaming, token counting, prompt caching, errors |
-| 23 | `23_ai_engineering_patterns.py` | Structured outputs, tool use, RAG, **evals**, prompt injection, cost discipline |
-| 24 | `24_ai_backend_and_capstone.py` | Serving an AI feature over HTTP, FastAPI, capstone projects, roadmap |
+| 21 | `21_http_and_apis.py` | HTTP, status codes, retries with backoff, pagination, rate limits, API keys. **Starts a practice API server on your machine** so every request is real, offline |
+| 22 | `22_claude_api.py` | The Messages API, models and pricing, streaming, token counting, prompt caching, errors. Runs with or without an API key |
+| 23 | `23_ai_engineering_patterns.py` | Structured outputs, a working tool-use loop, chunking, RAG, **evals with a confusion matrix**, prompt injection, cost discipline |
+| 24 | `24_ai_backend_and_capstone.py` | Serving an AI feature over HTTP, testing your own API, FastAPI, capstone projects, roadmap |
 
 ### Supporting files
 
@@ -107,9 +108,11 @@ Lessons 00–20 need **nothing but Python 3**. Check you have it:
 python3 --version        # 3.10 or newer
 ```
 
-Lessons 22–24 optionally use the Anthropic SDK. **They run fine without it** —
-they print every example and explain it, and only make live calls if both the
-SDK and a key are present.
+Lessons 22–24 optionally use the Anthropic SDK. **They run fine without it.**
+They include an offline simulator, so the conversation mechanics, token
+accounting, streaming loop, tool-calling loop and eval harness all genuinely
+execute and print real output — only the model's words are canned. Live calls
+happen only if both the SDK and a key are present.
 
 To go live:
 

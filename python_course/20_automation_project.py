@@ -534,6 +534,182 @@ def main(argv=None):
 #   Check the log the next day. You have now automated something real.
 
 
+# =============================================================================
+# SOLUTIONS
+# =============================================================================
+#
+# EXERCISE 1 — Add --largest N
+#   parser.add_argument("--largest", type=int, nargs="?", const=5,
+#                       metavar="N", help="show the N largest files")
+#   # then in main(), after the scan:
+#   if args.largest:
+#       logger.info("")
+#       logger.info(f"--- {args.largest} LARGEST ---")
+#       for record in sorted(files, key=lambda f: -f["size"])[:args.largest]:
+#           logger.info(f"  {record['name']:<30}{human_size(record['size']):>12}")
+#
+# EXERCISE 2 — Delete duplicates safely
+#   def delete_duplicates(files, logger, dry_run=True):
+#       """Keep the OLDEST copy of each duplicate set, remove the rest."""
+#       duplicates = find_duplicates(files, logger)
+#       freed = 0
+#       for group in duplicates.values():
+#           # oldest first, so group[0] is the keeper
+#           ordered = sorted(group, key=lambda r: r["modified"])
+#           keeper, rest = ordered[0], ordered[1:]
+#           logger.info(f"  keeping {keeper['name']} "
+#                       f"({keeper['modified']:%Y-%m-%d})")
+#           for record in rest:
+#               freed += record["size"]
+#               if dry_run:
+#                   logger.info(f"    WOULD DELETE {record['name']}")
+#               else:
+#                   record["path"].unlink()
+#                   logger.warning(f"    DELETED {record['name']}")
+#       logger.info(f"  {'would free' if dry_run else 'freed'} {human_size(freed)}")
+#       return freed
+#
+#   # Forcing a dry run first - the safety interlock the exercise asks for:
+#   #   parser.add_argument("--delete-duplicates", action="store_true")
+#   #   parser.add_argument("--i-have-reviewed-the-dry-run", action="store_true")
+#   #   if args.delete_duplicates and not args.dry_run \
+#   #           and not args.i_have_reviewed_the_dry_run:
+#   #       logger.error("refusing to delete: run with --dry-run first, then "
+#   #                    "re-run with --i-have-reviewed-the-dry-run")
+#   #       return 2
+#   # Making the dangerous path require an awkward, explicit flag is a real
+#   # technique. The awkwardness IS the feature.
+#
+# EXERCISE 3 — Recursive mode
+#   def scan_folder(folder, config, recursive=False):
+#       paths = folder.rglob("*") if recursive else folder.iterdir()
+#       files = []
+#       for path in sorted(paths):
+#           if not path.is_file() or path.name in config["ignore_names"]:
+#               continue
+#           ...same as before...
+#       return files
+#
+#   # WHAT GOES WRONG with --organise --recursive:
+#   #   1. You'd move files INTO category folders that your own scan then
+#   #      re-discovers on a later run, shuffling them repeatedly.
+#   #   2. Files from different subfolders with the same name collide.
+#   #   3. You destroy the existing folder structure, which probably meant
+#   #      something to whoever made it.
+#   # Sensible answer: allow --recursive for --report and --find-duplicates
+#   # (read-only operations), but refuse it for --organise. Encoding that
+#   # refusal in the tool is better design than a warning in the README.
+#
+# EXERCISE 4 — Write the report as JSON and CSV
+#   import csv
+#   def write_report(report, path):
+#       path = Path(path)
+#       if path.suffix == ".json":
+#           serialisable = {
+#               "count": report["count"],
+#               "total_size": report["total_size"],
+#               "categories": report["categories"],
+#               "extensions": dict(report["extensions"]),
+#               "largest": report["largest"]["name"],
+#           }
+#           path.write_text(json.dumps(serialisable, indent=2), encoding="utf-8")
+#       elif path.suffix == ".csv":
+#           with open(path, "w", encoding="utf-8", newline="") as f:
+#               writer = csv.writer(f)
+#               writer.writerow(["category", "files", "bytes"])
+#               for name, stats in sorted(report["categories"].items()):
+#                   writer.writerow([name, stats["count"], stats["size"]])
+#       else:
+#           raise ValueError(f"unsupported output type: {path.suffix}")
+#   # Note the Path objects and datetimes had to be converted - json.dumps
+#   # cannot serialise them (lesson 14, mistake 7).
+#
+# EXERCISE 5 — Date-based folders
+#   def organise_by_date(folder, files, logger, dry_run=True):
+#       for record in files:
+#           subfolder = folder / f"{record['modified']:%Y}" / f"{record['modified']:%m}"
+#           destination = subfolder / record["name"]
+#           if destination.exists():
+#               logger.warning(f"skip {record['name']} - already there")
+#               continue
+#           if dry_run:
+#               logger.info(f"WOULD MOVE {record['name']} -> "
+#                           f"{record['modified']:%Y/%m}/")
+#           else:
+#               subfolder.mkdir(parents=True, exist_ok=True)
+#               record["path"].rename(destination)
+#
+# EXERCISE 6 — A real config file
+#   # filekeeper.json
+#   {
+#     "type_folders": {
+#       "Photos": [".jpg", ".jpeg", ".png", ".heic"],
+#       "Work": [".pdf", ".docx", ".xlsx"],
+#       "Code": [".py", ".js", ".sql"]
+#     },
+#     "ignore_names": [".DS_Store"],
+#     "archive_folder": "_old"
+#   }
+#   # then:  python3 20_automation_project.py ~/Downloads --config filekeeper.json --report
+#   # load_config merges yours over DEFAULT_CONFIG, so anything you omit keeps
+#   # its default. That's why {**DEFAULT_CONFIG, **user_config} is the right
+#   # merge order (lesson 09 part 3).
+#
+# EXERCISE 7 — Undo
+#   def organise_files(folder, files, config, logger, dry_run=True):
+#       manifest = []
+#       for record in files:
+#           ...
+#           if not dry_run:
+#               record["path"].rename(destination)
+#               manifest.append({"from": str(record["path"]),
+#                                "to": str(destination)})
+#       if manifest:
+#           manifest_path = WORK_DIR / f"moves_{datetime.now():%Y%m%d_%H%M%S}.json"
+#           manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+#           logger.info(f"undo manifest: {manifest_path.name}")
+#       return len(manifest), 0
+#
+#   def undo_moves(manifest_path, logger, dry_run=True):
+#       moves = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+#       # Reverse order matters: undo the last move first, so that if a later
+#       # move depended on an earlier one you unwind cleanly.
+#       for move in reversed(moves):
+#           source, target = Path(move["to"]), Path(move["from"])
+#           if not source.exists():
+#               logger.warning(f"cannot undo - {source.name} is gone")
+#               continue
+#           if target.exists():
+#               logger.warning(f"cannot undo - {target.name} already exists")
+#               continue
+#           if dry_run:
+#               logger.info(f"WOULD RESTORE {source.name} -> {target.parent.name}/")
+#           else:
+#               target.parent.mkdir(parents=True, exist_ok=True)
+#               source.rename(target)
+#               logger.info(f"restored {source.name}")
+#   # Writing the manifest BEFORE you need it is the whole trick. An undo you
+#   # have to reconstruct afterwards from logs is not an undo.
+#
+# EXERCISE 8 — Schedule it
+#   crontab -e      then add:
+#       0 9 * * * /usr/bin/python3 /Users/sidd/Python/python_course/20_automation_project.py ~/Downloads --report >> ~/filekeeper_cron.log 2>&1
+#
+#   Field order is: minute hour day-of-month month day-of-week
+#       0 9 * * *     every day at 09:00
+#       */15 * * * *  every 15 minutes
+#       0 9 * * 1     every Monday at 09:00
+#
+#   THREE THINGS THAT BITE EVERYONE THE FIRST TIME:
+#     1. cron runs with a minimal PATH and environment. Use the FULL path to
+#        python3 (`which python3`) and to your script.
+#     2. cron has no terminal, so anything using input() hangs forever. This
+#        is why lesson 04 insisted on sys.argv for unattended jobs.
+#     3. Redirect output (>> file 2>&1) or you will never see the errors.
+#   On macOS you may also need to grant cron Full Disk Access in
+#   System Settings > Privacy & Security.
+
+
 if __name__ == "__main__":
     # sys.exit() passes the return value of main() to the operating system as
     # the process's exit code.

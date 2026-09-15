@@ -94,3 +94,99 @@
 2026-09-13 20:36:01,221 INFO     done. log written to /Users/sidd/Python/python_course/workspace/filekeeper.log
 2026-09-13 20:36:01,221 INFO     this was a demo on a sandbox folder; nothing of yours was touched
 2026-09-13 20:36:01,221 INFO     try: python3 20_automation_project.py --help
+2026-09-14 18:55:14,601 INFO     ============================================================
+2026-09-14 18:55:14,601 INFO     filekeeper starting on /Users/sidd/Python/python_course/workspace/filekeeper_demo
+2026-09-14 18:55:14,601 INFO     
+2026-09-14 18:55:14,601 INFO     --- REPORT ---
+2026-09-14 18:55:14,602 INFO     11 files, 5.7 KB total
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO       category        files          size
+2026-09-14 18:55:14,602 INFO       -----------------------------------
+2026-09-14 18:55:14,602 INFO       Images              2        4.3 KB
+2026-09-14 18:55:14,602 INFO       Archives            1         900 B
+2026-09-14 18:55:14,602 INFO       Documents           3         470 B
+2026-09-14 18:55:14,602 INFO       Spreadsheets        2          24 B
+2026-09-14 18:55:14,602 INFO       Data                1          17 B
+2026-09-14 18:55:14,602 INFO       Code                1          15 B
+2026-09-14 18:55:14,602 INFO       Other               1          14 B
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO       largest : holiday.jpg (2.1 KB)
+2026-09-14 18:55:14,602 INFO       oldest  : archive.zip (2026-02-26)
+2026-09-14 18:55:14,602 INFO       newest  : mystery.xyz (2026-09-14)
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO     --- DUPLICATES ---
+2026-09-14 18:55:14,602 DEBUG    6 files share a size - hashing those
+2026-09-14 18:55:14,602 INFO     found 2 duplicate sets, wasting 2.2 KB
+2026-09-14 18:55:14,602 INFO       identical (2.1 KB): holiday.jpg, holiday_copy.jpg
+2026-09-14 18:55:14,602 INFO       identical (10 B): notes.txt, notes_backup.txt
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO     --- ARCHIVE ---
+2026-09-14 18:55:14,602 INFO     2 files older than 90 days (before 2026-06-16)
+2026-09-14 18:55:14,602 INFO     WOULD ARCHIVE archive.zip (2026-02-26)
+2026-09-14 18:55:14,602 INFO     WOULD ARCHIVE receipt.pdf (2026-02-26)
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO     --- ORGANISE ---
+2026-09-14 18:55:14,602 INFO     WOULD MOVE archive.zip -> Archives/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE config.json -> Data/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE holiday.jpg -> Images/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE holiday_copy.jpg -> Images/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE mystery.xyz -> Other/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE notes.txt -> Documents/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE notes_backup.txt -> Documents/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE receipt.pdf -> Documents/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE sales_q1.csv -> Spreadsheets/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE sales_q2.csv -> Spreadsheets/
+2026-09-14 18:55:14,602 INFO     WOULD MOVE script.py -> Code/
+2026-09-14 18:55:14,602 INFO     would move 11 files, skipped 0
+2026-09-14 18:55:14,602 INFO     
+2026-09-14 18:55:14,602 INFO     done. log written to /Users/sidd/Python/python_course/workspace/filekeeper.log
+2026-09-14 18:55:14,602 INFO     this was a demo on a sandbox folder; nothing of yours was touched
+2026-09-14 18:55:14,602 INFO     try: python3 20_automation_project.py --help
+2026-09-14 18:55:23,715 INFO     ============================================================
+2026-09-14 18:55:23,715 INFO     filekeeper starting on /Users/sidd/Python/python_course/workspace/filekeeper_demo
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO     --- REPORT ---
+2026-09-14 18:55:23,715 INFO     11 files, 5.7 KB total
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO       category        files          size
+2026-09-14 18:55:23,715 INFO       -----------------------------------
+2026-09-14 18:55:23,715 INFO       Images              2        4.3 KB
+2026-09-14 18:55:23,715 INFO       Archives            1         900 B
+2026-09-14 18:55:23,715 INFO       Documents           3         470 B
+2026-09-14 18:55:23,715 INFO       Spreadsheets        2          24 B
+2026-09-14 18:55:23,715 INFO       Data                1          17 B
+2026-09-14 18:55:23,715 INFO       Code                1          15 B
+2026-09-14 18:55:23,715 INFO       Other               1          14 B
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO       largest : holiday.jpg (2.1 KB)
+2026-09-14 18:55:23,715 INFO       oldest  : archive.zip (2026-02-26)
+2026-09-14 18:55:23,715 INFO       newest  : mystery.xyz (2026-09-14)
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO     --- DUPLICATES ---
+2026-09-14 18:55:23,715 DEBUG    6 files share a size - hashing those
+2026-09-14 18:55:23,715 INFO     found 2 duplicate sets, wasting 2.2 KB
+2026-09-14 18:55:23,715 INFO       identical (2.1 KB): holiday.jpg, holiday_copy.jpg
+2026-09-14 18:55:23,715 INFO       identical (10 B): notes.txt, notes_backup.txt
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO     --- ARCHIVE ---
+2026-09-14 18:55:23,715 INFO     2 files older than 90 days (before 2026-06-16)
+2026-09-14 18:55:23,715 INFO     WOULD ARCHIVE archive.zip (2026-02-26)
+2026-09-14 18:55:23,715 INFO     WOULD ARCHIVE receipt.pdf (2026-02-26)
+2026-09-14 18:55:23,715 INFO     
+2026-09-14 18:55:23,715 INFO     --- ORGANISE ---
+2026-09-14 18:55:23,715 INFO     WOULD MOVE archive.zip -> Archives/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE config.json -> Data/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE holiday.jpg -> Images/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE holiday_copy.jpg -> Images/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE mystery.xyz -> Other/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE notes.txt -> Documents/
+2026-09-14 18:55:23,715 INFO     WOULD MOVE notes_backup.txt -> Documents/
+2026-09-14 18:55:23,716 INFO     WOULD MOVE receipt.pdf -> Documents/
+2026-09-14 18:55:23,716 INFO     WOULD MOVE sales_q1.csv -> Spreadsheets/
+2026-09-14 18:55:23,716 INFO     WOULD MOVE sales_q2.csv -> Spreadsheets/
+2026-09-14 18:55:23,716 INFO     WOULD MOVE script.py -> Code/
+2026-09-14 18:55:23,716 INFO     would move 11 files, skipped 0
+2026-09-14 18:55:23,716 INFO     
+2026-09-14 18:55:23,716 INFO     done. log written to /Users/sidd/Python/python_course/workspace/filekeeper.log
+2026-09-14 18:55:23,716 INFO     this was a demo on a sandbox folder; nothing of yours was touched
+2026-09-14 18:55:23,716 INFO     try: python3 20_automation_project.py --help
