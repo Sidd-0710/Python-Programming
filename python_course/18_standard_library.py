@@ -3,8 +3,42 @@
  LESSON 18 — THE STANDARD LIBRARY TOOLKIT
 ===============================================================================
 
-Time: about 75 minutes.
+Time: about 75 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-17.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+This lesson is a TOUR, not a test. You are not meant to memorise it - only to
+remember that these tools EXIST, so you come back and look them up later.
+
+IN THIS LESSON YOU WILL MEET:
+  1. dates and times: today, in 30 days, how long ago             (PART 1)
+  2. smarter containers: counting in one line                     (PART 2)
+  3. finding patterns in text (emails, dates, phone numbers)      (PART 3)
+  4. looping helpers (optional)                                   (PART 4)
+  5. statistics, and exact money maths                            (PART 5)
+  6. information about the computer, and secret settings          (PART 6)
+  7. secure random tokens, unique ids, tidy text                  (PART 7)
+  8. proper command-line tools                                    (PART 8)
+
+NEW WORDS - come back here whenever you forget one:
+
+  datetime      Python's module for dates and times
+  timedelta     a length of time: "30 days", "2 hours"
+  strftime      turn a date INTO text, in a format you choose
+  strptime      turn text BACK INTO a date ("parse time")
+  Counter       a dict that counts things for you
+  defaultdict   a dict that creates a starting value for missing keys
+  regular expression ("regex")   a mini-language for describing text
+                patterns, like "four digits, a dash, two digits"
+  Decimal       exact decimal numbers - the right type for money
+  environment variable   a setting given to a program from OUTSIDE its code
+                - the safe place for passwords and API keys
+  secrets       the module for random values that must be unguessable
+  argparse      the module for building --flag style command-line tools
 
 
 -------------------------------------------------------------------------------
@@ -50,6 +84,10 @@ print(LINE)
 print("PART 1 — datetime")
 print(LINE)
 
+# A CONFUSING NAME, EXPLAINED: the MODULE is called datetime, and inside it
+# there's a type ALSO called datetime (a date plus a time). So you'll see
+# datetime.datetime.now() - "the datetime type, from the datetime module".
+# The `date` type is just a day, with no time.
 from datetime import date, timedelta
 
 today = date.today()
@@ -91,10 +129,13 @@ print("  sorted properly  :", [str(d) for d in sorted(real_dates)])
 print()
 
 # TIMING code - how long did that take?
-start = time.perf_counter()
+start = time.perf_counter()               # a precise stopwatch reading
 sum(range(1_000_000))
 print(f"  timed a loop     : {time.perf_counter() - start:.4f} seconds")
 print()
+
+# TRY IT NOW (1 minute):
+#   Print the date 100 days from today:  date.today() + timedelta(days=100)
 
 
 # =============================================================================
@@ -107,6 +148,7 @@ print(LINE)
 from collections import Counter, defaultdict, deque, namedtuple
 
 # --- Counter: counting, solved ---
+# Lesson 09's counting loop, in one line:
 words = "the cat sat on the mat the cat slept".split()
 counts = Counter(words)
 print("  Counter          :", counts)
@@ -120,6 +162,7 @@ print("  subtract         :", Counter("aabbcc") - Counter("abc"))
 print()
 
 # --- defaultdict: no more "if key not in dict" ---
+# Lesson 09's grouping pattern, without the "create the list first" step:
 by_letter = defaultdict(list)            # missing keys auto-create a list
 for word in words:
     by_letter[word[0]].append(word)
@@ -154,6 +197,10 @@ print("  still a tuple    :", p[0], tuple(p))
 # Use it when you want a lightweight record but a full class is overkill.
 print()
 
+# TRY IT NOW (1 minute):
+#   Print Counter("banana") and its most_common(1).
+#   (Answer: Counter({'a': 3, 'n': 2, 'b': 1}) and [('a', 3)])
+
 
 # =============================================================================
 # PART 3 — re: REGULAR EXPRESSIONS
@@ -164,12 +211,13 @@ print(LINE)
 
 # A regular expression is a mini-language for describing text patterns. It's
 # dense and takes practice, but nothing else finds "every email in this
-# document" so concisely.
+# document" so concisely. For now, aim to READ patterns, not write them.
 #
 # THE ESSENTIALS:
 #   \d  a digit        \w  a letter/digit/underscore    \s  whitespace
 #   .   any character  +   one or more    *   zero or more    ?   optional
 #   ^   start          $   end            []  any one of these
+#   {4} exactly 4 of the thing before it
 #   ()  a capture group - the part you want to extract
 
 text = """
@@ -178,16 +226,21 @@ Order 1001 shipped 2024-03-15, order 1002 shipped 2024-03-18.
 Call 555-0101 or 555-0199.
 """
 
+# [\w.+-]+  one or more letters/digits/dots/plus/dashes (the name part)
+# @         then an @
+# [\w-]+    the domain name
+# \.[\w.]+  a dot, then the rest (com, co.uk...)
 emails = re.findall(r"[\w.+-]+@[\w-]+\.[\w.]+", text)
 print("  emails  :", emails)
 
+# \d{4}-\d{2}-\d{2}  =  4 digits, dash, 2 digits, dash, 2 digits  (2024-03-15)
 dates_found = re.findall(r"\d{4}-\d{2}-\d{2}", text)
 print("  dates   :", dates_found)
 
 orders = re.findall(r"order (\d+)", text)     # the () captures just the number
 print("  order ids:", orders)
 
-phones = re.findall(r"\d{3}-\d{4}", text)
+phones = re.findall(r"\d{3}-\d{4}", text)     # 3 digits, dash, 4 digits
 print("  phones  :", phones)
 print()
 
@@ -201,7 +254,8 @@ if match:
 print()
 
 # sub() replaces - useful for redacting or cleaning:
-print("  redacted:", re.sub(r"[\w.+-]+@[\w-]+\.[\w.]+", "[EMAIL]", text.strip().splitlines()[0]))
+first_line = text.strip().splitlines()[0]
+print("  redacted:", re.sub(r"[\w.+-]+@[\w-]+\.[\w.]+", "[EMAIL]", first_line))
 print("  cleaned :", re.sub(r"\s+", " ", "  too    much   space  ").strip())
 print()
 
@@ -210,8 +264,14 @@ print()
 # strings (r"...") so backslashes survive.
 
 
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. Dates, counting and patterns are the three you'll
+#  use most. The rest of the tour is quicker.
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
-# PART 4 — itertools: SMARTER LOOPING
+# PART 4 — itertools: SMARTER LOOPING (optional - skim it)
 # =============================================================================
 print(LINE)
 print("PART 4 — itertools")
@@ -244,10 +304,10 @@ print("PART 5 — statistics AND decimal")
 print(LINE)
 
 data = [23, 45, 12, 67, 34, 89, 21, 45, 33]
-print("  mean    :", round(statistics.mean(data), 2))
-print("  median  :", statistics.median(data))
-print("  mode    :", statistics.mode(data))
-print("  stdev   :", round(statistics.stdev(data), 2))
+print("  mean    :", round(statistics.mean(data), 2))     # the average
+print("  median  :", statistics.median(data))             # the middle value
+print("  mode    :", statistics.mode(data))               # the most common value
+print("  stdev   :", round(statistics.stdev(data), 2))    # how spread out they are
 print("  quantiles:", [round(q, 1) for q in statistics.quantiles(data)])
 print()
 
@@ -260,6 +320,8 @@ quantity = 3
 total_cost = price * quantity
 print(f"  exact total: {total_cost}")
 print(f"  rounded    : {total_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}")
+#   .quantize(Decimal('0.01')) means "round to 2 decimal places", and
+#   ROUND_HALF_UP is the school rule (2.5 -> 3), not banker's rounding.
 
 # ALWAYS build Decimals from STRINGS. Decimal(0.1) inherits the float's error;
 # Decimal("0.1") is exact.
@@ -289,6 +351,8 @@ print("  $API_KEY       :", os.environ.get("API_KEY", "(not set - good)"))
 
 # NEVER hard-code passwords or API keys in source. Read them from the
 # environment, and keep them out of version control.
+# You set one in the terminal before running a program:
+#     export API_KEY="abc123"        (Mac/Linux)
 print()
 
 
@@ -305,6 +369,7 @@ print("  secure token   :", secrets.token_hex(16))
 print("  secure choice  :", secrets.choice(["a", "b", "c"]))
 
 alphabet = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+# In plain English: "pick 16 random characters from the alphabet and join them"
 print("  random password:", "".join(secrets.choice(alphabet) for _ in range(16)))
 print()
 
@@ -417,41 +482,80 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * date.today(), + timedelta(days=30), strftime to format, strptime to parse.
+#   * Counter counts; defaultdict creates missing keys; deque is a fast queue.
+#   * re.findall(pattern, text) finds every match of a text pattern.
+#   * statistics: mean, median, mode, stdev. Decimal("19.99") for exact money.
+#   * os.environ.get("KEY") reads settings and secrets from outside the code.
+#   * secrets for anything that must be unguessable; uuid for unique ids.
+#   * argparse turns a script into a proper tool with --flags and --help.
+#   * When stuck: dir(thing), help(thing), docs.python.org.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. How do you get the date one week from today?
+#   Q2. What does Counter(["a", "b", "a"]) give?
+#   Q3. Why Decimal("0.1") and not Decimal(0.1)?
+#   Q4. You need a password-reset token. random or secrets?
+#   Q5. Where should an API key live - in the code, or in the environment?
+#
+# ANSWERS
+#   A1. date.today() + timedelta(days=7)
+#   A2. Counter({'a': 2, 'b': 1})
+#   A3. 0.1 as a float is already slightly wrong; the string is exact.
+#   A4. secrets. random is predictable.
+#   A5. The environment (os.environ). Never in the code.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Date tools
+# WARM-UP A (easy) — Today
+#   Print today's date, and today's weekday name (strftime("%A")).
+#
+# WARM-UP B (easy) — Count letters
+#   Print Counter("mississippi").most_common(2).
+#
+# WARM-UP C (easy) — A secure token
+#   Print secrets.token_hex(8). Run the file twice and compare.
+#
+# EXERCISE 1 (medium) — Date tools
 #   Write functions: days_until(target_date), age_in_days(birth_date), and
 #   next_friday(). Print the results for a few inputs.
+#   Hint: date.weekday() gives 0 for Monday up to 6 for Sunday (Friday is 4).
 #
-# EXERCISE 2 — Counter practice
+# EXERCISE 2 (easy) — Counter practice
 #   Read data/server.log, extract the log level from each line, and use Counter
 #   to report the counts and the most common level. Compare how much shorter
 #   this is than lesson 13's manual version.
 #
-# EXERCISE 3 — Regex extraction
+# EXERCISE 3 (medium) — Regex extraction
 #   From data/server.log, extract every IP address (pattern: \d+\.\d+\.\d+\.\d+)
 #   and every duration in ms. Report the unique IPs and the longest duration.
 #
-# EXERCISE 4 — Password generator
+# EXERCISE 4 (medium) — Password generator
 #   Write generate_password(length=16, symbols=True) using `secrets`. Ensure at
 #   least one digit, one uppercase and one symbol. Generate five.
 #
-# EXERCISE 5 — Statistics report
+# EXERCISE 5 (medium) — Statistics report
 #   Load the quantities from data/sales.csv and print mean, median, mode,
 #   standard deviation and quartiles. Then flag any value more than two
 #   standard deviations from the mean as an outlier.
 #
-# EXERCISE 6 — Money done right
+# EXERCISE 6 (medium) — Money done right
 #   Redo lesson 14's revenue calculation using Decimal throughout. Compare the
 #   final total against the float version and see if they differ.
 #
-# EXERCISE 7 — Build a CLI
+# EXERCISE 7 (challenge) — Build a CLI
 #   Write wordcount.py using argparse: it takes a file path, an optional
 #   --top N (default 10) and a --min-length flag, then prints the most common
 #   words. Run it with --help and admire the free documentation.
 #
-# EXERCISE 8 — itertools challenge
+# EXERCISE 8 (challenge) — itertools challenge
 #   Given a list of orders, use groupby to produce a per-region summary
 #   (remember to sort first). Then use combinations to list every possible
 #   pair of products that could be bundled together.
@@ -466,6 +570,15 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   print(date.today(), date.today().strftime("%A"))
+#
+# WARM-UP B
+#   print(Counter("mississippi").most_common(2))   # -> [('i', 4), ('s', 4)]
+#
+# WARM-UP C
+#   print(secrets.token_hex(8))                    # different every run
+#
 # EXERCISE 1
 #   def days_until(target):
 #       return (target - date.today()).days
@@ -473,14 +586,18 @@ print()
 #       return (date.today() - birth).days
 #   def next_friday():
 #       today = date.today()
-#       ahead = (4 - today.weekday()) % 7 or 7      # 4 == Friday
-#       return today + timedelta(days=ahead)
+#       days_ahead = 4 - today.weekday()           # Friday is day 4
+#       if days_ahead <= 0:                        # already Friday, or past it
+#           days_ahead += 7                        # so jump to next week's
+#       return today + timedelta(days=days_ahead)
+#   print(days_until(date(2026, 12, 25)), next_friday())
 #
 # EXERCISE 2
-#   from collections import Counter
-#   levels = Counter(line.split()[2]
-#                    for line in (Path(__file__).parent / "data" / "server.log")
-#                    .read_text(encoding="utf-8").splitlines() if line.strip())
+#   log_path = Path(__file__).parent / "data" / "server.log"
+#   levels = Counter()
+#   for line in log_path.read_text(encoding="utf-8").splitlines():
+#       if line.strip():
+#           levels[line.split()[2]] += 1          # the 3rd word is the level
 #   print(levels, levels.most_common(1))
 #
 # EXERCISE 3
@@ -491,22 +608,28 @@ print()
 #
 # EXERCISE 4
 #   import string
+#   SYMBOLS = "!@#$%^&*-_"
 #   def generate_password(length=16, symbols=True):
 #       pool = string.ascii_letters + string.digits
 #       if symbols:
-#           pool += "!@#$%^&*-_"
-#       while True:
+#           pool += SYMBOLS
+#       while True:                                # keep trying until one passes
 #           pw = "".join(secrets.choice(pool) for _ in range(length))
-#           if (any(c.isdigit() for c in pw) and any(c.isupper() for c in pw)
-#                   and (not symbols or any(c in "!@#$%^&*-_" for c in pw))):
+#           has_digit = any(c.isdigit() for c in pw)
+#           has_upper = any(c.isupper() for c in pw)
+#           has_symbol = any(c in SYMBOLS for c in pw)
+#           if has_digit and has_upper and (has_symbol or not symbols):
 #               return pw
+#   for _ in range(5):
+#       print(generate_password())
 #
 # EXERCISE 5
 #   import csv
 #   with open(Path(__file__).parent / "data" / "sales.csv", newline="",
 #             encoding="utf-8") as f:
 #       quantities = [int(r["quantity"]) for r in csv.DictReader(f)]
-#   mean, sd = statistics.mean(quantities), statistics.stdev(quantities)
+#   mean = statistics.mean(quantities)
+#   sd = statistics.stdev(quantities)
 #   print(mean, statistics.median(quantities), sd)
 #   print("outliers:", [q for q in quantities if abs(q - mean) > 2 * sd])
 #
@@ -521,6 +644,7 @@ print()
 #   words = [w.strip(".,!?;:") for w in words if len(w) >= args.min_length]
 #   for word, count in Counter(words).most_common(args.top):
 #       print(f"{word:<15}{count:>5}")
+#   (argparse turns --min-length into args.min_length - dashes become underscores.)
 
 
 print("=" * 70)

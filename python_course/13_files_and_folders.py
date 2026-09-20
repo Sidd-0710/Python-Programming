@@ -3,8 +3,39 @@
  LESSON 13 — FILES AND FOLDERS: MAKING WORK PERSIST
 ===============================================================================
 
-Time: about 80 minutes.
+Time: about 80 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-12.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. describe where a file lives, in a way that always works      (PART 1)
+  2. read a file, even a huge one                                 (PART 2)
+  3. write and add to files                                       (PART 3)
+  4. list and search folders                                      (PART 4)
+  5. copy, rename, move and delete files - safely                 (PART 5)
+  6. handle missing or unreadable files                           (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  file          data saved on disk, with a name:  sales.csv
+  folder        a container for files (also called a "directory")
+  path          text describing where a file is:  data/sales.csv
+  absolute path the FULL location, from the very top of the disk
+  relative path a location measured from "where you are now"
+  Path          pathlib's tool for working with paths:  Path("data") / "x.csv"
+  open()        opens a file so you can read or write it
+  mode          HOW you open it: "r" read, "w" write (wipes!), "a" add to end
+  with          opens something AND guarantees it's closed afterwards
+  encoding      how text is stored as bytes. Always use "utf-8"
+  glob          find files by pattern:  "*.csv" = every file ending .csv
+  working directory   the folder the terminal was in when you ran the program
+
+EVERYTHING THIS LESSON CREATES goes into a `workspace/` folder next to it, so
+you can't damage anything. Delete that folder any time.
 
 
 -------------------------------------------------------------------------------
@@ -38,7 +69,7 @@ write, move and rename files in a loop, you can replace hours of clicking:
    wherever the terminal happened to be when you started the program - NOT
    necessarily where your script file lives. This difference causes an enormous
    number of "it works when I run it from VS Code but not from the terminal"
-   problems. PART 2 shows the fix.
+   problems. PART 1 shows the fix.
 
 2. YOU MUST CLOSE WHAT YOU OPEN.
    An open file holds an operating-system resource, and data you've written may
@@ -50,7 +81,7 @@ write, move and rename files in a loop, you can replace hours of clicking:
 
 from pathlib import Path
 import os
-import shutil
+import shutil          # "shell utilities": copying and deleting whole folders
 
 LINE = "-" * 70
 
@@ -69,7 +100,7 @@ print(LINE)
 
 # __file__ is a special variable: the path of THIS script. .resolve() makes it
 # absolute, .parent gives the folder containing it.
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parent      # "the folder this lesson is in"
 DATA_DIR = HERE / "data"                    # note the / to join
 WORK_DIR = HERE / "workspace"               # scratch space for this lesson
 
@@ -86,9 +117,9 @@ print()
 sales_file = DATA_DIR / "sales.csv"
 print("a full path      :", sales_file)
 print("  .name          :", sales_file.name)        # sales.csv
-print("  .stem          :", sales_file.stem)        # sales
-print("  .suffix        :", sales_file.suffix)      # .csv
-print("  .parent        :", sales_file.parent)
+print("  .stem          :", sales_file.stem)        # sales       (name without extension)
+print("  .suffix        :", sales_file.suffix)      # .csv        (the extension)
+print("  .parent        :", sales_file.parent)      # the folder it's in
 print("  .exists()      :", sales_file.exists())
 print("  .is_file()     :", sales_file.is_file())
 print("  size in bytes  :", sales_file.stat().st_size)
@@ -99,6 +130,10 @@ print()
 WORK_DIR.mkdir(parents=True, exist_ok=True)
 print("workspace ready  :", WORK_DIR.exists())
 print()
+
+# TRY IT NOW (1 minute):
+#   Make  notes = HERE / "workspace" / "notes.txt"  and print its .name,
+#   .suffix and .exists(). (It doesn't exist yet - so .exists() is False.)
 
 
 # =============================================================================
@@ -117,6 +152,8 @@ log_file = DATA_DIR / "server.log"
 #     # file is closed automatically here, even if an exception was raised
 #
 # "with" sets up something, gives it to you, and guarantees cleanup afterwards.
+# In plain English: "open this file, call it f while I use it, and close it
+# for me when the indented block ends".
 
 # METHOD 1 - read the entire file into one string. Simple, but loads everything
 # into memory. Fine up to a few hundred MB; fatal for a 20GB log.
@@ -140,7 +177,7 @@ print()
 # file is. This is how you process a 20GB log on a laptop.
 error_count = 0
 with open(log_file, "r", encoding="utf-8") as f:
-    for line in f:
+    for line in f:                          # one line at a time
         line = line.rstrip("\n")            # strip the trailing newline
         if " ERROR " in line:
             error_count += 1
@@ -204,6 +241,17 @@ print(output_file.read_text(encoding="utf-8"))
 print("quick.txt says:", (WORK_DIR / "quick.txt").read_text(encoding="utf-8").strip())
 print()
 
+# TRY IT NOW (2 minutes):
+#   Write your name into workspace/me.txt using write_text, then read it back
+#   with read_text and print it. Open the workspace folder in VS Code's file
+#   list - your file is really there.
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. Reading and writing are done. After the break:
+#  finding, renaming and organising many files at once - real automation.
+# -----------------------------------------------------------------------------
+
 
 # =============================================================================
 # PART 4 — LISTING AND FINDING FILES
@@ -228,7 +276,8 @@ print("all .csv files in data/:", [p.name for p in DATA_DIR.glob("*.csv")])
 print("everything in data/    :", sorted(p.name for p in DATA_DIR.glob("*")))
 print()
 
-# rglob() searches recursively, through every subfolder:
+# glob("*.py") = "every file in this folder ending in .py".
+# (rglob() does the same search through every subfolder too.)
 python_files = sorted(HERE.glob("*.py"))
 print(f"lesson files in this folder: {len(python_files)}")
 for path in python_files[:5]:
@@ -237,7 +286,10 @@ print("  ...")
 print()
 
 # A real automation query - "which files are biggest?"
-sized = [(p.stat().st_size, p.name) for p in HERE.glob("*.py")]
+# Build a list of (size, name) pairs, then sort biggest first.
+sized = []
+for p in HERE.glob("*.py"):
+    sized.append((p.stat().st_size, p.name))
 print("three largest lesson files:")
 for size, name in sorted(sized, reverse=True)[:3]:
     print(f"  {name:<34} {size:>8,} bytes")
@@ -272,7 +324,7 @@ print("after rename:", sorted(p.name for p in sandbox.iterdir()))
 # A BULK RENAME - the thing you'd genuinely automate. Add a prefix to every
 # .txt file:
 for path in sorted(sandbox.glob("*.txt")):
-    new_path = path.with_name(f"archive_{path.name}")
+    new_path = path.with_name(f"archive_{path.name}")   # same folder, new name
     path.rename(new_path)
 print("after bulk rename:", sorted(p.name for p in sandbox.iterdir()))
 
@@ -293,11 +345,14 @@ print("after delete:", sorted(p.name for p in sandbox.iterdir()))
 # Everyone who skips step 1 eventually deletes something they needed.
 print()
 
-# Organising files by extension - a genuinely useful script:
+# Organising files by extension - a genuinely useful script.
+# In plain English: "for each file, make a folder named after its extension in
+# capitals (.txt -> TXT), and move the file into it".
 print("organising the sandbox by file type:")
 for path in sorted(sandbox.iterdir()):
     if path.is_file():
-        folder = sandbox / path.suffix.lstrip(".").upper()
+        folder_name = path.suffix.lstrip(".").upper()   # ".txt" -> "TXT"
+        folder = sandbox / folder_name
         folder.mkdir(exist_ok=True)
         path.rename(folder / path.name)
 
@@ -363,7 +418,6 @@ def analyse_log(path):
         "total": 0,
         "levels": {},
         "errors": [],
-        "slowest": None,
         "users": set(),
     }
 
@@ -374,7 +428,7 @@ def analyse_log(path):
                 continue
 
             summary["total"] += 1
-            parts = line.split(None, 3)
+            parts = line.split(maxsplit=3)      # date, time, level, message
             if len(parts) < 4:
                 continue
             date, time, level, message = parts
@@ -395,6 +449,7 @@ def analyse_log(path):
 
 stats = analyse_log(log_file)
 
+# Build the report one line at a time in a list, then write it all at once.
 report_lines = [
     "SERVER LOG ANALYSIS",
     "=" * 50,
@@ -407,10 +462,13 @@ for level, count in sorted(stats["levels"].items()):
     share = count / stats["total"]
     report_lines.append(f"  {level:<6} {count:>4}  ({share:.0%})  {'#' * count}")
 
-report_lines += ["", f"Distinct users seen: {len(stats['users'])}"]
+report_lines.append("")
+report_lines.append(f"Distinct users seen: {len(stats['users'])}")
 report_lines.append(f"  {', '.join(sorted(stats['users']))}")
-report_lines += ["", f"Errors ({len(stats['errors'])}):"]
-report_lines += [f"  {e}" for e in stats["errors"]]
+report_lines.append("")
+report_lines.append(f"Errors ({len(stats['errors'])}):")
+for error in stats["errors"]:
+    report_lines.append(f"  {error}")
 
 report_path = WORK_DIR / "log_report.txt"
 report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
@@ -462,42 +520,81 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * Build paths from the script's folder:  HERE = Path(__file__).resolve().parent
+#     then  HERE / "data" / "sales.csv"
+#   * Always open files with  with open(path, mode, encoding="utf-8") as f:
+#   * Modes: "r" read, "w" write (WIPES the file first), "a" add to the end.
+#   * Loop over a file to read it line by line - works for any size.
+#   * Small files: path.read_text() and path.write_text() in one line.
+#   * folder.glob("*.csv") finds files; .rename(), shutil.copy2(), .unlink()
+#     move, copy and delete them. Deleting is permanent - dry-run first.
+#   * Wrap file work in try/except FileNotFoundError and friends.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What's the difference between the "w" and "a" modes?
+#   Q2. Why use  with open(...)  instead of plain open()?
+#   Q3. You read a line and compare it to "yes" - but it never matches. Why?
+#   Q4. How do you find every .txt file in a folder?
+#   Q5. What should you ALWAYS do before running a loop that deletes files?
+#
+# ANSWERS
+#   A1. "w" wipes the file and starts fresh; "a" keeps it and adds to the end.
+#   A2. with closes the file for you - even if an error happens.
+#   A3. The line still has "\n" on the end. Use line.strip().
+#   A4. folder.glob("*.txt")
+#   A5. A dry run: print what WOULD be deleted, check it, then delete.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
 # Work inside the `workspace/` folder so you can't damage anything.
 #
-# EXERCISE 1 — Write and read back
+# WARM-UP A (easy) — Write a file
+#   Write the text "hello, file!" into workspace/hello.txt using write_text.
+#
+# WARM-UP B (easy) — Read it back
+#   Read workspace/hello.txt with read_text and print what's inside.
+#
+# WARM-UP C (easy) — Does it exist?
+#   Print whether data/sales.csv exists, and whether data/nope.csv exists.
+#
+# EXERCISE 1 (easy) — Write and read back
 #   Write a file containing your five favourite foods, one per line. Read it
 #   back, strip the newlines, and print them numbered.
 #
-# EXERCISE 2 — Append a journal
+# EXERCISE 2 (medium) — Append a journal
 #   Write a function log_entry(text) that appends a line to workspace/journal.txt
 #   in the form "[entry N] text". Call it four times, then print the file.
 #
-# EXERCISE 3 — Word count tool
+# EXERCISE 3 (medium) — Word count tool
 #   Read data/server.log and report: number of lines, number of words, number
 #   of characters, and the 5 most common words (use a dict, lesson 09).
 #
-# EXERCISE 4 — Filter a file
+# EXERCISE 4 (medium) — Filter a file
 #   Read data/server.log and write TWO new files into workspace/: errors.log
 #   (only ERROR lines) and warnings.log (only WARN lines). Print how many
 #   lines each received.
 #
-# EXERCISE 5 — Find and report
+# EXERCISE 5 (medium) — Find and report
 #   List every .py file in the course folder with its size in KB, sorted
 #   largest first. Print a total at the bottom.
 #
-# EXERCISE 6 — Safe bulk renamer (do the dry run first!)
+# EXERCISE 6 (challenge) — Safe bulk renamer (do the dry run first!)
 #   In workspace/, create 6 files named "IMG 001.JPG" through "IMG 006.JPG".
 #   Write a renamer that converts them to "img_001.jpg" style. Run it FIRST in
 #   dry-run mode that only prints what it would do, then for real.
 #
-# EXERCISE 7 — Deduplicate a file
+# EXERCISE 7 (medium) — Deduplicate a file
 #   Create a file with repeated lines. Write code producing a new file with
 #   duplicates removed, preserving the original order (lesson 08 has the trick).
 #
-# EXERCISE 8 — Backup with a timestamp
+# EXERCISE 8 (medium) — Backup with a timestamp
 #   Copy data/sales.csv into workspace/ with today's date in the filename, e.g.
 #   sales_2026-09-13.csv. (Peek at lesson 18 for `datetime`, or use a fixed
 #   string for now.)
@@ -512,19 +609,33 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   (WORK_DIR / "hello.txt").write_text("hello, file!\n", encoding="utf-8")
+#
+# WARM-UP B
+#   print((WORK_DIR / "hello.txt").read_text(encoding="utf-8"))
+#
+# WARM-UP C
+#   print((DATA_DIR / "sales.csv").exists())      # -> True
+#   print((DATA_DIR / "nope.csv").exists())       # -> False
+#
 # EXERCISE 1
 #   foods_path = WORK_DIR / "foods.txt"
 #   foods_path.write_text("dosa\nramen\npizza\nbiryani\ntacos\n", encoding="utf-8")
 #   with open(foods_path, encoding="utf-8") as f:
-#       for i, line in enumerate(f, start=1):
-#           print(f"{i}. {line.strip()}")
+#       for number, line in enumerate(f, start=1):
+#           print(f"{number}. {line.strip()}")
 #
 # EXERCISE 2
 #   journal = WORK_DIR / "journal.txt"
 #   def log_entry(text):
-#       existing = journal.read_text(encoding="utf-8").splitlines() if journal.exists() else []
+#       if journal.exists():
+#           existing_lines = journal.read_text(encoding="utf-8").splitlines()
+#       else:
+#           existing_lines = []
+#       entry_number = len(existing_lines) + 1
 #       with open(journal, "a", encoding="utf-8") as f:
-#           f.write(f"[entry {len(existing) + 1}] {text}\n")
+#           f.write(f"[entry {entry_number}] {text}\n")
 #   for note in ["started lesson 13", "learned pathlib", "wrote a file", "done"]:
 #       log_entry(note)
 #   print(journal.read_text(encoding="utf-8"))
@@ -540,7 +651,8 @@ print()
 #       print(word, count)
 #
 # EXERCISE 4
-#   errors, warnings = [], []
+#   errors = []
+#   warnings = []
 #   with open(DATA_DIR / "server.log", encoding="utf-8") as f:
 #       for line in f:
 #           if " ERROR " in line:
@@ -552,15 +664,19 @@ print()
 #   print(len(errors), len(warnings))
 #
 # EXERCISE 5
-#   files = [(p.stat().st_size, p.name) for p in HERE.glob("*.py")]
+#   files = []
+#   for p in HERE.glob("*.py"):
+#       files.append((p.stat().st_size, p.name))
+#   total_bytes = 0
 #   for size, name in sorted(files, reverse=True):
 #       print(f"{name:<36}{size / 1024:>8.1f} KB")
-#   print(f"{'TOTAL':<36}{sum(s for s, _ in files) / 1024:>8.1f} KB")
+#       total_bytes += size
+#   print(f"{'TOTAL':<36}{total_bytes / 1024:>8.1f} KB")
 #
 # EXERCISE 6
 #   for n in range(1, 7):
 #       (WORK_DIR / f"IMG {n:03d}.JPG").write_text("x", encoding="utf-8")
-#   DRY_RUN = True
+#   DRY_RUN = True                       # change to False once the list looks right
 #   for path in sorted(WORK_DIR.glob("IMG *.JPG")):
 #       new_name = path.name.lower().replace(" ", "_")
 #       if DRY_RUN:

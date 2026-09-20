@@ -3,8 +3,34 @@
  LESSON 12 — ERROR HANDLING: CODE THAT SURVIVES REALITY
 ===============================================================================
 
-Time: about 65 minutes.
+Time: about 65 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-11.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. recognise the errors you'll meet most often                  (PART 1)
+  2. catch an error and carry on, instead of crashing             (PART 2)
+  3. run clean-up code whatever happens                           (PART 3)
+  4. raise your OWN errors when something is wrong                (PART 4)
+  5. avoid the habits that hide bugs                              (PART 5)
+  6. process a messy batch without one bad row stopping it all    (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  exception     Python's name for an error that happens WHILE the program
+                runs: ValueError, KeyError, ZeroDivisionError...
+  raise         to set off an exception - "stop, something is wrong"
+  catch         to handle an exception so the program doesn't crash
+  try/except    try:  "attempt this"   except SomeError:  "if it fails, do this"
+  else          (on a try) runs only if NOTHING went wrong
+  finally       (on a try) runs ALWAYS, error or not - used for clean-up
+  traceback     the long error report Python prints when nobody catches it
+  custom exception  your own error type, like InsufficientFundsError
+  isinstance()  asks "is this value of this type?":  isinstance(5, int) -> True
 
 
 -------------------------------------------------------------------------------
@@ -68,6 +94,9 @@ print(LINE)
 
 # Rather than describe them, let's trigger them and look. Each one is caught so
 # the file keeps running.
+#
+# Each lambda (lesson 10) is a tiny function that does ONE risky thing. Keeping
+# them in a list lets the loop below run each one inside a try, in turn.
 
 examples = [
     ("int('abc')",          lambda: int("abc")),
@@ -83,8 +112,8 @@ examples = [
 
 for label, operation in examples:
     try:
-        operation()
-    except Exception as error:
+        operation()                         # run the risky thing...
+    except Exception as error:              # ...and catch whatever it raises
         # type(error).__name__ gives the exception's class name as text
         print(f"  {label:<22} -> {type(error).__name__}: {error}")
 print()
@@ -148,20 +177,24 @@ print()
 def parse_config_value(raw):
     try:
         return int(raw.strip())
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError):    # "either of these two errors"
         return None
 
 print("  parse '  5 ':", parse_config_value("  5 "))
-print("  parse None  :", parse_config_value(None))
+print("  parse None  :", parse_config_value(None))   # None has no .strip()
 print()
 
 # Capture the exception object with `as` to inspect or log it:
 try:
     int("not a number")
-except ValueError as error:
+except ValueError as error:                 # `error` now holds the details
     print(f"  caught: {error}")
     print(f"  its type: {type(error).__name__}")
 print()
+
+# TRY IT NOW (2 minutes):
+#   Write a try/except that attempts  int("12.5")  and, if it fails with a
+#   ValueError, prints "that's not a whole number".
 
 
 # =============================================================================
@@ -206,6 +239,12 @@ print()
 # which is why you'll rarely write finally by hand.)
 
 
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You can now catch errors. After the break: raising
+#  your own errors, the habits to avoid, and a real batch processor.
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
 # PART 4 — RAISING YOUR OWN EXCEPTIONS
 # =============================================================================
@@ -218,7 +257,7 @@ print(LINE)
 
 def set_age(age):
     """Validate and return an age, refusing nonsense."""
-    if not isinstance(age, int):
+    if not isinstance(age, int):            # "if age is NOT a whole number..."
         raise TypeError(f"age must be an int, got {type(age).__name__}")
     if age < 0:
         raise ValueError(f"age cannot be negative (got {age})")
@@ -242,7 +281,10 @@ print()
 # Rule: fail fast, fail loudly, fail close to the cause.
 
 # YOUR OWN EXCEPTION TYPES - for a real application, define names that mean
-# something in your domain:
+# something in your domain.
+# (`class` is properly covered in lesson 16. For now: writing
+#  `class SomethingError(Exception):` with a docstring underneath is ALL it
+#  takes to create a new kind of error.)
 class InsufficientFundsError(Exception):
     """Raised when an account lacks the funds for a withdrawal."""
 
@@ -267,9 +309,12 @@ for balance, amount, frozen in [(100, 30, False), (100, 500, False), (100, 30, T
 # The caller can now handle "not enough money" completely differently from
 # "account frozen" - one might offer an overdraft, the other must call support.
 # You couldn't do that if both returned False.
-# (`class` is properly covered in lesson 16 - for now, note that inheriting
-#  from Exception is all it takes to make a new error type.)
 print()
+
+# TRY IT NOW (2 minutes):
+#   Write  def check_score(score):  that raises ValueError("score must be
+#   0-100") when score is outside 0 to 100, and returns score otherwise.
+#   Call it with 50 and with 150 (inside a try) and print what happens.
 
 
 # =============================================================================
@@ -284,7 +329,7 @@ print(LINE)
 #     try:
 #         do_something()
 #     except:                # catches EVERYTHING
-#         pass               # and says nothing
+#         pass               # and says nothing  (`pass` = "do nothing")
 #
 # This is the worst line of code you can write. It swallows typos (NameError),
 # swallows Ctrl+C (KeyboardInterrupt), swallows out-of-memory errors, and
@@ -331,6 +376,7 @@ def load_settings(raw):
     try:
         return int(raw)
     except ValueError as error:
+        # "raise a NEW, clearer error, and remember the original as its cause"
         raise ValueError(f"invalid setting {raw!r} in config file") from error
 
 try:
@@ -365,7 +411,7 @@ raw_records = [
 
 def parse_record(line):
     """Parse one record, raising ValueError with a clear reason if it's bad."""
-    parts = [p.strip() for p in line.split(",")]
+    parts = [p.strip() for p in line.split(",")]    # split at commas, trim each
 
     if len(parts) != 3:
         raise ValueError(f"expected 3 fields, found {len(parts)}")
@@ -378,6 +424,7 @@ def parse_record(line):
     try:
         amount = float(amount_text)
     except ValueError:
+        # `from None` hides the original, less helpful error message
         raise ValueError(f"amount {amount_text!r} is not a number") from None
 
     if amount < 0:
@@ -389,6 +436,8 @@ def parse_record(line):
 processed = []
 failures = []
 
+# In plain English: "for each line (numbered from 1): skip blanks; try to parse
+# it; if it's good keep it, if it's bad write down WHY - and keep going".
 for line_number, line in enumerate(raw_records, start=1):
     if not line.strip():
         continue                              # blank lines are expected, skip
@@ -483,39 +532,81 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * Errors while running are EXCEPTIONS: ValueError, KeyError, TypeError...
+#   * try: ... except SomeError: ...  catches one and lets the program go on.
+#   * Catch SPECIFIC errors. Never a bare  except:  that hides everything.
+#   * else runs if nothing failed; finally runs no matter what.
+#   * raise ValueError("clear message")  when YOUR code finds a problem.
+#   * class MyError(Exception):  creates your own error type.
+#   * In a batch job: catch per item, record failures, keep going, report.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. Which exception does  int("hello")  raise?  And  {"a": 1}["b"]?
+#   Q2. What's wrong with  except: pass ?
+#   Q3. When does a finally block run?
+#   Q4. Your function gets a negative price. Return None, print, or raise?
+#   Q5. In a loop over 1,000 records, where should the try go - around the
+#       whole loop, or inside it around each record?
+#
+# ANSWERS
+#   A1. ValueError.  KeyError.
+#   A2. It hides EVERY error, even typos, so bugs become invisible.
+#   A3. Always - whether the try succeeded, failed, or returned.
+#   A4. Raise (a ValueError with a clear message). It's loud and the caller
+#       decides what to do.
+#   A5. Inside, around each record - so one bad record doesn't stop the rest.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Safe converter
+# WARM-UP A (easy) — Your first catch
+#   Wrap  int("abc")  in try/except ValueError and print "not a number"
+#   instead of crashing.
+#
+# WARM-UP B (easy) — Divide safely
+#   Try  10 / 0  and catch ZeroDivisionError, printing "can't divide by zero".
+#
+# WARM-UP C (easy) — Raise one
+#   Create  number = 150.  If it's over 100, raise ValueError("too big").
+#   Put it inside a try, catch the ValueError, and print its message.
+#
+# EXERCISE 1 (easy) — Safe converter
 #   Write safe_float(text, default=0.0) that returns the float, or the default
 #   if conversion fails. Test with "3.14", "abc", "", None and "  2.5  ".
+#   Hint: float(None) raises TypeError, not ValueError - catch both.
 #
-# EXERCISE 2 — Calculator that won't die
+# EXERCISE 2 (medium) — Calculator that won't die
 #   Write calculate(a, operator, b) supporting + - * /. Raise a ValueError for
 #   an unknown operator, and handle division by zero gracefully. Test all four
 #   operators plus two failure cases.
 #
-# EXERCISE 3 — Retry with backoff
-#   Write attempt_connection() that fails the first two times and succeeds on
-#   the third (use a counter). Then write a retry loop that calls it up to 5
-#   times, catching the failure, printing the attempt number, and stopping on
-#   success. Print a final message either way.
+# EXERCISE 3 (medium) — Retry
+#   Write attempt_connection(attempt_number) that raises ConnectionError for
+#   attempts 1 and 2, and returns "connected" from attempt 3 onwards. Then write
+#   a loop that tries up to 5 times, catching the failure, printing the attempt
+#   number, and stopping on success. Print a final message either way.
 #
-# EXERCISE 4 — Validate a user record
+# EXERCISE 4 (medium) — Validate a user record
 #   Write validate_user(data) taking a dict. Raise specific, informative
 #   exceptions for: missing "email" key, email without "@", missing "age",
 #   age not an int, age under 13. Test with 5 different broken dicts.
 #
-# EXERCISE 5 — Batch processor
+# EXERCISE 5 (challenge) — Batch processor
 #   Extend PART 6's processor: also reject names shorter than 2 characters and
 #   ids that are duplicated. Report duplicates separately from other failures.
 #
-# EXERCISE 6 — Custom exception hierarchy
+# EXERCISE 6 (medium) — Custom exception hierarchy
 #   Create a base ValidationError, then FieldMissingError and FieldFormatError
 #   that inherit from it. Write code that catches them separately, and other
 #   code that catches all three with a single `except ValidationError`.
 #
-# EXERCISE 7 — Spot the anti-pattern
+# EXERCISE 7 (medium) — Spot the anti-pattern
 #   Explain everything wrong with this, then rewrite it properly:
 #       try:
 #           data = load()
@@ -535,6 +626,26 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   try:
+#       int("abc")
+#   except ValueError:
+#       print("not a number")
+#
+# WARM-UP B
+#   try:
+#       print(10 / 0)
+#   except ZeroDivisionError:
+#       print("can't divide by zero")
+#
+# WARM-UP C
+#   number = 150
+#   try:
+#       if number > 100:
+#           raise ValueError("too big")
+#   except ValueError as error:
+#       print(error)                   # -> too big
+#
 # EXERCISE 1
 #   def safe_float(text, default=0.0):
 #       try:
@@ -546,30 +657,35 @@ print()
 #
 # EXERCISE 2
 #   def calculate(a, operator, b):
-#       if operator == "+": return a + b
-#       if operator == "-": return a - b
-#       if operator == "*": return a * b
+#       if operator == "+":
+#           return a + b
+#       if operator == "-":
+#           return a - b
+#       if operator == "*":
+#           return a * b
 #       if operator == "/":
 #           try:
 #               return a / b
 #           except ZeroDivisionError:
-#               return float("inf")
+#               print("can't divide by zero")
+#               return None
 #       raise ValueError(f"unknown operator {operator!r}")
 #
 # EXERCISE 3
-#   state = {"calls": 0}
-#   def attempt_connection():
-#       state["calls"] += 1
-#       if state["calls"] < 3:
+#   def attempt_connection(attempt_number):
+#       if attempt_number < 3:
 #           raise ConnectionError("network unreachable")
 #       return "connected"
+#
+#   connected = False
 #   for attempt in range(1, 6):
 #       try:
-#           print(attempt_connection())
-#           break
-#       except ConnectionError as e:
-#           print(f"attempt {attempt} failed: {e}")
-#   else:
+#           print(attempt_connection(attempt))
+#           connected = True
+#           break                       # success: stop retrying
+#       except ConnectionError as error:
+#           print(f"attempt {attempt} failed: {error}")
+#   if not connected:
 #       print("gave up after 5 attempts")
 #
 # EXERCISE 4
@@ -594,11 +710,17 @@ print()
 #   #       duplicates.append(record["id"])
 #   #       continue
 #   #   seen_ids.add(record["id"])
+#   # and in parse_record, before the return:
+#   #   if len(name) < 2:
+#   #       raise ValueError(f"name {name!r} is too short")
 #
 # EXERCISE 6
-#   class ValidationError(Exception): pass
-#   class FieldMissingError(ValidationError): pass
-#   class FieldFormatError(ValidationError): pass
+#   class ValidationError(Exception):
+#       pass
+#   class FieldMissingError(ValidationError):
+#       pass
+#   class FieldFormatError(ValidationError):
+#       pass
 #   try:
 #       raise FieldMissingError("email")
 #   except FieldMissingError as e:
@@ -629,6 +751,8 @@ print()
 #           send_email(total)
 #       except ConnectionError as e:
 #           print(f"Saved, but the email failed: {e}")   # non-fatal
+#   (`raise` on its own, inside an except, re-raises the same error after
+#    you've printed your message.)
 
 
 print("=" * 70)

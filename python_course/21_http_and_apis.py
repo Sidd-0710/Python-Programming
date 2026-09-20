@@ -3,7 +3,7 @@
  LESSON 21 — HTTP AND WEB APIs
 ===============================================================================
 
-Time: about 85 minutes.
+Time: about 85 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-20 (especially 09 dictionaries, 12 errors, 14 JSON).
 
 This is the prerequisite for everything AI. An LLM call IS an HTTP POST with a
@@ -14,6 +14,44 @@ NOTE: this lesson starts a small PRACTICE API SERVER on your own machine, so
 every example below makes a REAL HTTP request that works with no internet
 connection. You get to see genuine status codes, headers, pagination, auth
 failures and rate limits - not simulated ones.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. read a URL and build one safely                              (PART 1)
+  2. send GET and POST requests from Python                       (PART 2)
+  3. tell "my mistake" errors apart from "try again" errors       (PART 3)
+  4. retry the right way, waiting longer each time                (PART 4)
+  5. send API keys safely                                         (PART 5)
+  6. fetch data that comes in pages, and respect rate limits      (PARTS 6-7)
+
+NEW WORDS - come back here whenever you forget one:
+
+  HTTP          the language browsers and programs use to talk to servers
+  API           a website for PROGRAMS: it answers with data (JSON), not pages
+  request       what you send: a method, a URL, headers, maybe a body
+  response      what comes back: a status code, headers, a body
+  method        what you want to do: GET (read), POST (create), PUT, PATCH,
+                DELETE
+  URL           the address:  http://127.0.0.1:8000/api/items/3
+  query string  the ?name=value part of a URL:  ?page=2&per_page=10
+  header        a  Name: value  line of extra information on a request or
+                response
+  body          the data inside a request or response - usually JSON
+  status code   a number saying what happened: 200 ok, 404 not found,
+                500 server broke
+  timeout       how long to wait for an answer before giving up
+  retry         trying again after a temporary failure
+  backoff       waiting a bit LONGER before each retry
+  rate limit    a cap on how many requests you may send per second/minute
+  pagination    getting a long list one PAGE at a time
+  API key / token   a secret that proves who you are to the API
+
+This lesson is also where FastAPI starts: next you'll build the SERVER side
+of everything you call here.
 
 
 -------------------------------------------------------------------------------
@@ -87,11 +125,12 @@ HERE = Path(__file__).resolve().parent
 
 
 # =============================================================================
-# THE PRACTICE SERVER
+# THE PRACTICE SERVER - SCENERY, YOU CAN SKIP READING IT
 # =============================================================================
-# Everything below this block is a small fake API running on your own machine.
-# You do NOT need to understand it yet - lesson 24 builds one properly. It's
-# here so the rest of this lesson can make real requests offline.
+# Everything in this block is a small fake API running on your own machine.
+# You do NOT need to understand it - lesson 24, and the whole FastAPI course,
+# teach you to build servers properly. It's only here so the rest of this
+# lesson can make real requests offline. Scroll down to PART 1.
 #
 # It offers:
 #   GET  /api/items?page=1&per_page=3   a paginated list
@@ -101,6 +140,7 @@ HERE = Path(__file__).resolve().parent
 #   GET  /api/slow?seconds=2            deliberately slow
 #   GET  /api/notjson                   returns HTML, to break your parser
 #   GET  /api/status/<code>             returns any status you ask for
+#   GET  /api/limited                   allows 8 requests per 10 seconds
 #   POST /api/items                     creates an item
 # -----------------------------------------------------------------------------
 
@@ -230,6 +270,8 @@ print("  every request below is real - no internet needed")
 print(LINE)
 print()
 
+# ======================= END OF THE SCENERY - START READING HERE =============
+
 
 # =============================================================================
 # PART 1 — THE ANATOMY OF A URL
@@ -239,7 +281,7 @@ print("PART 1 — URLs AND QUERY PARAMETERS")
 print(LINE)
 
 example = "https://api.example.com:443/v1/orders/42?status=paid&limit=10#notes"
-parsed = urllib.parse.urlparse(example)
+parsed = urllib.parse.urlparse(example)          # split a URL into its parts
 
 print(f"  full URL : {example}")
 print(f"    scheme : {parsed.scheme}      https or http")
@@ -299,15 +341,15 @@ def http_request(url, method="GET", payload=None, headers=None, timeout=10):
     Raises urllib.error.HTTPError on 4xx/5xx - we handle that in PART 3.
     """
     data = None
-    all_headers = dict(headers or {})
+    all_headers = dict(headers or {})                     # a copy (or an empty dict)
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")        # dict -> JSON -> bytes
-        all_headers["Content-Type"] = "application/json"
+        all_headers["Content-Type"] = "application/json"  # "the body is JSON"
 
     request = urllib.request.Request(url, data=data, headers=all_headers,
                                      method=method)
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        raw = response.read().decode("utf-8")
+        raw = response.read().decode("utf-8")             # bytes -> text
         return response.status, dict(response.headers), json.loads(raw)
 
 
@@ -336,8 +378,12 @@ print()
 
 # Read it back to prove it really was created:
 _, _, fetched = http_request(f"{BASE_URL}{headers.get('Location')}")
+#   `_` is the name for "a value I don't need" - here, the status and headers.
 print(f"  reading it back: {fetched}")
 print()
+
+# TRY IT NOW (1 minute):
+#   Add a line that GETs /api/items/7 with http_request and prints its body.
 
 
 # =============================================================================
@@ -351,6 +397,7 @@ def call_api(url, method="GET", payload=None, headers=None, timeout=10):
     """Call an API and turn every failure mode into a clear result dict.
 
     Never raises. The caller inspects `ok` and `retryable` and decides.
+    The result always has the same keys, so the caller's code stays simple.
     """
     try:
         status, response_headers, body = http_request(url, method, payload,
@@ -361,12 +408,14 @@ def call_api(url, method="GET", payload=None, headers=None, timeout=10):
     except urllib.error.HTTPError as error:
         # The server answered, but with an error status.
         raw = error.read().decode("utf-8", errors="replace")
+        error.close()                        # done reading: free the connection
         try:
             detail = json.loads(raw)
         except json.JSONDecodeError:
             detail = raw[:120]
         retry_after = error.headers.get("Retry-After")
         return {"ok": False, "status": error.code,
+                # worth retrying only for "too many requests" and server faults
                 "retryable": error.code == 429 or error.code >= 500,
                 "retry_after": int(retry_after) if retry_after else None,
                 "data": detail}
@@ -414,6 +463,10 @@ result = call_api(f"{BASE_URL}/api/slow?seconds=2", timeout=1)
 print(f"    -> {result['data']}, retryable={result['retryable']}")
 print()
 
+# TRY IT NOW (1 minute):
+#   Call  call_api(f"{BASE_URL}/api/status/503")  and print result["status"]
+#   and result["retryable"]. Is 503 worth retrying? (Answer: yes - it's a 5xx.)
+
 
 # =============================================================================
 # PART 4 — RETRIES WITH EXPONENTIAL BACKOFF
@@ -457,6 +510,7 @@ def with_retry(make_call, max_attempts=5, base_delay=0.05, logger=print):
             delay = result["retry_after"]
             reason = "server asked us to wait"
         else:
+            # 2 ** (attempt - 1) doubles each time: 1, 2, 4, 8...
             delay = base_delay * (2 ** (attempt - 1)) + random.uniform(0, base_delay)
             reason = "exponential backoff"
 
@@ -467,21 +521,29 @@ def with_retry(make_call, max_attempts=5, base_delay=0.05, logger=print):
     return result
 
 
+# WHY `lambda: call_api(...)`? with_retry needs to make the call AGAIN on each
+# attempt. So instead of calling call_api() ourselves (which would run it just
+# once, right now), we hand over a tiny zero-argument function that DOES the
+# call. with_retry runs it as many times as it needs to (lesson 10 PART 5).
 print("  /api/flaky fails twice then succeeds. Watch the retries:\n")
-result = with_retry(lambda: call_api(f"{BASE_URL}/api/flaky"),
-                    logger=lambda m: print(m))
+result = with_retry(lambda: call_api(f"{BASE_URL}/api/flaky"))
 print(f"    final result: {result['data']}")
 print()
 
 print("  now a 404, which must NOT be retried:\n")
-with_retry(lambda: call_api(f"{BASE_URL}/api/items/999"),
-           logger=lambda m: print(m))
+with_retry(lambda: call_api(f"{BASE_URL}/api/items/999"))
 print()
 
 print("""  This exact logic lives inside every serious API client. The Anthropic
   SDK you'll use in lesson 22 has it built in (max_retries=2 by default),
   which is a good reason to use an official SDK rather than hand-rolling HTTP.""")
 print()
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. Requests, errors and retries are done - that's the
+#  core. After the break: API keys, pagination, rate limits, and a full client.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -585,6 +647,8 @@ def fetch_all_pages(base, per_page=3, max_pages=50):
     everything = []
     page_number = 1
 
+    # In plain English: "ask for page 1, keep what's on it; if the API says
+    # there's more, ask for page 2 ... and stop when it says there isn't".
     while page_number <= max_pages:
         result = call_api(f"{base}/api/items?page={page_number}&per_page={per_page}")
         if not result["ok"]:
@@ -647,13 +711,13 @@ class RateLimiter:
     """Allow at most `calls_per_second`, sleeping when necessary."""
 
     def __init__(self, calls_per_second=2.0):
-        self.min_interval = 1.0 / calls_per_second
+        self.min_interval = 1.0 / calls_per_second    # seconds between calls
         self.last_call = 0.0
 
     def wait(self):
         elapsed = time.monotonic() - self.last_call
-        if elapsed < self.min_interval:
-            time.sleep(self.min_interval - elapsed)
+        if elapsed < self.min_interval:               # too soon since the last one?
+            time.sleep(self.min_interval - elapsed)   # wait out the difference
         self.last_call = time.monotonic()
 
 
@@ -713,7 +777,7 @@ class ApiClient:
         return with_retry(
             lambda: call_api(url, method, payload, self._headers(), self.timeout),
             max_attempts=self.max_attempts,
-            logger=lambda message: None,          # silent by default
+            logger=lambda message: None,          # silent: a logger that does nothing
         )
 
     def get(self, path):
@@ -724,7 +788,8 @@ class ApiClient:
 
     def get_all(self, path, per_page=3):
         """Paginate automatically - the caller never thinks about pages."""
-        items, page = [], 1
+        items = []
+        page = 1
         while page <= 50:
             result = self.get(f"{path}?page={page}&per_page={per_page}")
             if not result["ok"]:
@@ -792,51 +857,91 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * An API request = method + URL + headers + (maybe) a JSON body.
+#     The response = status code + headers + a JSON body.
+#   * Build query strings with urlencode, never by gluing text together.
+#   * ALWAYS set a timeout.
+#   * 4xx (except 429) = your mistake - don't retry. 429 and 5xx = temporary -
+#     retry, waiting longer each time (backoff), obeying Retry-After.
+#   * API keys go in headers, and come from os.environ - never from the code.
+#   * Long lists come in pages: loop until the API says there are no more.
+#   * Throttle yourself to stay under rate limits.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. Which method reads data? Which creates something new?
+#   Q2. You get a 401. Should your code retry?
+#   Q3. You get a 503. Should your code retry? Immediately?
+#   Q4. What goes wrong if you forget a timeout?
+#   Q5. An API returns has_next: true. What should your code do?
+#
+# ANSWERS
+#   A1. GET reads; POST creates.
+#   A2. No - your credentials are wrong. Retrying changes nothing.
+#   A3. Yes, but not immediately: wait (backoff), and longer each time.
+#   A4. A hung server can freeze your program forever.
+#   A5. Ask for the next page, and keep going until has_next is false.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
 # The practice server is still running while this file executes, so you can
 # write code against BASE_URL in the space below.
 #
-# EXERCISE 1 — Explore the API
+# WARM-UP A (easy) — One GET
+#   Use call_api to fetch /api/items/2 and print result["data"]["name"].
+#
+# WARM-UP B (easy) — A failure, handled
+#   Fetch /api/items/500 and print result["ok"] and result["status"].
+#
+# WARM-UP C (easy) — Send a header
+#   Fetch /api/protected with headers={"Authorization": f"Bearer {_VALID_TOKEN}"}
+#   and print the secret.
+#
+# EXERCISE 1 (easy) — Explore the API
 #   Fetch /api/items/1, /api/items/7 and /api/items/99. Print the status and
 #   body of each. Explain to yourself why the third is different.
 #
-# EXERCISE 2 — Safe fetch
+# EXERCISE 2 (medium) — Safe fetch
 #   Write get_item(item_id) that returns the item dict, or None if it doesn't
 #   exist, and raises RuntimeError for any other failure. Test it with ids
 #   1, 99 and "abc".
 #
-# EXERCISE 3 — Add a DELETE method
+# EXERCISE 3 (easy) — Add a DELETE method
 #   Add `delete(path)` to ApiClient. The practice server doesn't implement
-#   DELETE, so confirm you get a 404 and that your client handles it cleanly
-#   rather than crashing.
+#   DELETE, so confirm you get an error status and that your client handles it
+#   cleanly rather than crashing.
 #
-# EXERCISE 4 — Per-request timeout
+# EXERCISE 4 (medium) — Per-request timeout
 #   Give ApiClient._request an optional `timeout=None` parameter that
 #   overrides the client default for one call. Test it against
 #   /api/slow?seconds=2 with both a 1-second and a 3-second timeout.
 #
-# EXERCISE 5 — Response caching
+# EXERCISE 5 (challenge) — Response caching
 #   Add a cache to ApiClient: identical GET paths requested within 60 seconds
 #   should return the stored result without another HTTP call. Prove it works
 #   by checking that call_count does not increase on the second request.
 #
-# EXERCISE 6 — Collect every item, safely
+# EXERCISE 6 (medium) — Collect every item, safely
 #   Write a function that fetches all items using per_page=2, counts how many
 #   requests it needed, and reports the total value of in-stock items only.
 #
-# EXERCISE 7 — Respect the rate limit
+# EXERCISE 7 (medium) — Respect the rate limit
 #   Call /api/limited 15 times WITHOUT ever getting a 429, by using a
 #   RateLimiter tuned below the server's 8-per-10-seconds allowance. Print how
-#   long the whole run took.
+#   long the whole run took. (Warning: this takes about 20 seconds.)
 #
-# EXERCISE 8 — A request logger
+# EXERCISE 8 (challenge) — A request logger
 #   Add a `log` list to ApiClient recording method, path, status and duration
 #   in milliseconds for every call - but never the Authorization header. Print
 #   the log as a table at the end, with a total-time row.
 #
-# EXERCISE 9 — Status code classifier
+# EXERCISE 9 (medium) — Status code classifier
 #   Write classify(status) returning one of "success", "redirect",
 #   "client_error", "server_error", "unknown", plus a boolean saying whether
 #   it's worth retrying. Test it against /api/status/200, 301, 404, 429, 500.
@@ -851,12 +956,25 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   result = call_api(f"{BASE_URL}/api/items/2")
+#   print(result["data"]["name"])            # -> Widget 2
+#
+# WARM-UP B
+#   result = call_api(f"{BASE_URL}/api/items/500")
+#   print(result["ok"], result["status"])    # -> False 404
+#
+# WARM-UP C
+#   result = call_api(f"{BASE_URL}/api/protected",
+#                     headers={"Authorization": f"Bearer {_VALID_TOKEN}"})
+#   print(result["data"]["secret"])
+#
 # EXERCISE 1
 #   for item_id in (1, 7, 99):
 #       result = call_api(f"{BASE_URL}/api/items/{item_id}")
 #       print(item_id, result["status"], result["data"])
-#   # 99 returns 404 because the server only has ids 1-11. A 404 here is a
-#   # normal answer to a reasonable question, not a bug.
+#   # 99 returns 404 because the server only has ids 1-11 (plus any you
+#   # created). A 404 here is a normal answer to a reasonable question.
 #
 # EXERCISE 2
 #   def get_item(item_id):
@@ -878,16 +996,17 @@ print()
 #   def delete(self, path):
 #       return self._request(path, "DELETE")
 #   result = client.delete("/api/items/1")
-#   print(result["status"], result["data"])   # 404, handled without crashing
+#   print(result["status"], result["data"])   # an error status, handled - no crash
 #
 # EXERCISE 4
 #   def _request(self, path, method="GET", payload=None, timeout=None):
 #       url = f"{self.base_url}/{path.lstrip('/')}"
 #       self.limiter.wait()
 #       self.call_count += 1
-#       effective = timeout if timeout is not None else self.timeout
+#       if timeout is None:
+#           timeout = self.timeout               # fall back to the client default
 #       return with_retry(
-#           lambda: call_api(url, method, payload, self._headers(), effective),
+#           lambda: call_api(url, method, payload, self._headers(), timeout),
 #           max_attempts=self.max_attempts, logger=lambda m: None)
 #   # then:
 #   print(client._request("/api/slow?seconds=2", timeout=1)["data"])   # timed out
@@ -897,19 +1016,22 @@ print()
 #   # in __init__:  self._cache = {}
 #   def get(self, path, max_age=60):
 #       now = time.monotonic()
-#       hit = self._cache.get(path)
-#       if hit and now - hit[0] < max_age:
-#           return hit[1]
+#       stored = self._cache.get(path)       # (time_saved, result) or None
+#       if stored is not None and now - stored[0] < max_age:
+#           return stored[1]                 # fresh enough - no HTTP call
 #       result = self._request(path)
 #       if result["ok"]:
 #           self._cache[path] = (now, result)
 #       return result
 #   before = client.call_count
-#   client.get("/api/items/1"); client.get("/api/items/1")
+#   client.get("/api/items/1")
+#   client.get("/api/items/1")
 #   print("extra HTTP calls:", client.call_count - before)      # 1, not 2
 #
 # EXERCISE 6
-#   items, page, requests_made = [], 1, 0
+#   items = []
+#   page = 1
+#   requests_made = 0
 #   while True:
 #       result = call_api(f"{BASE_URL}/api/items?page={page}&per_page=2")
 #       requests_made += 1

@@ -14,6 +14,25 @@ Time for this session: about 45 minutes.
 
 
 -------------------------------------------------------------------------------
+ NEW WORDS - read this list once; come back whenever a word confuses you
+-------------------------------------------------------------------------------
+
+  program       a list of instructions for the computer, saved in a file
+  code          the instructions themselves - the text you write
+  Python        the language we write those instructions in
+  run           tell the computer to follow the instructions in a file
+  terminal      the panel (usually at the bottom of VS Code) where you type
+                commands and where your program's output appears
+  output        whatever your program shows in the terminal
+  print()       the instruction that shows something in the terminal
+  comment       a note for humans, starting with #. Python ignores it
+  error         Python stopping to tell you it couldn't follow an instruction
+  bug           a mistake in code that makes it do the wrong thing
+
+Every lesson in this course starts with a list like this one.
+
+
+-------------------------------------------------------------------------------
  WHAT IS A PROGRAM?
 -------------------------------------------------------------------------------
 
@@ -95,12 +114,20 @@ Each numbered file is one learning session (45-90 minutes). For every file:
  STEP 4 - DO THE EXERCISES at the bottom of the file. Write the code yourself,
           with your own fingers. Reading code and writing code are different
           skills, the way reading music and playing an instrument are different
-          skills.
+          skills. Every lesson starts with easy WARM-UPS - do those first.
 
  STEP 5 - Only after genuinely attempting an exercise, scroll to the SOLUTIONS
           section at the very bottom and compare. If your solution works but
           looks different from mine, that's fine - there are many correct
           answers.
+
+Inside each lesson you'll also see:
+
+  TRY IT NOW       a 1-2 minute task, right after the idea it practises.
+                   Do it before you read on - it's where things "click".
+  GOOD PLACE FOR A BREAK
+                   the halfway point of a longer lesson. Take one.
+  RECAP            a short summary, plus quick questions to test yourself.
 
 A NOTE ON YOUR EXISTING FILES: you already wrote `FirstCode.py`, `var.py` and
 `Mul_Ass.py`. You had a habit of commenting out the code after finishing it.
@@ -153,7 +180,7 @@ Now stop reading and look at the code below - then run the file.
 
 # This is a comment. Python skips it entirely.
 # The line below is an instruction. Python runs it.
-print("Hello. This text was produced by line 128 of 00_START_HERE.py.")
+print("Hello. This text was produced by line 183 of 00_START_HERE.py.")
 
 # print() can be called as many times as you like. Each call starts a new line
 # in the terminal. Python runs them strictly in the order they appear.
@@ -164,6 +191,11 @@ print("Instruction 3 runs third.")
 # An empty print() just prints a blank line. Useful for spacing out output so
 # it's readable.
 print()
+
+# TRY IT NOW (1 minute):
+#   Change the text inside the quotes of "Instruction 1 runs first." to any
+#   sentence you like. Run the file. Find your sentence in the output.
+#   Only the text INSIDE the quotes changes what's printed.
 
 
 # =============================================================================
@@ -194,6 +226,14 @@ print("2 plus 2 is", 2 + 2)
 print("2 + 2")        # no arithmetic happens - it's just text
 print(2 + 2)          # arithmetic happens - the answer is printed
 print()
+
+# TRY IT NOW (1 minute):
+#   Add these two lines below this comment, and PREDICT what each prints
+#   before you run the file:
+#       print("10 * 5")
+#       print(10 * 5)
+#   (Answer: the first prints the text 10 * 5, the second prints 50.
+#    In Python, * means multiply.)
 
 
 # =============================================================================
@@ -244,6 +284,12 @@ print("Errors are information, not judgement.")
 print()
 
 
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. The next part is only a preview - relax while you
+#  read it. You are NOT expected to understand it yet.
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
 # PART 5 — A TINY TASTE OF WHERE YOU'RE HEADED
 # =============================================================================
@@ -251,8 +297,12 @@ print()
 # You won't understand every line here yet, and you are NOT supposed to. This
 # is a preview - a photo of the destination before the hike. Come back and read
 # it again after lesson 09 and it will be completely obvious.
+#
+# The plain-English notes on the right say what each line does. Just read
+# those for now.
 
-monthly_sales = [1200, 1450, 1100, 1800, 2100, 1950]
+monthly_sales = [1200, 1450, 1100, 1800, 2100, 1950]   # six numbers, kept together
+                                                        # under one name (a "list")
 
 total = sum(monthly_sales)                     # add every number in the list
 average = total / len(monthly_sales)           # divide by how many there are
@@ -263,7 +313,9 @@ print("Total:", total)
 print("Average per month:", average)
 print("Best month:", best_month)
 
-# And a bar chart, drawn with nothing but text:
+# And a bar chart, drawn with nothing but text.
+# In plain English: "for each month, starting the count at 1, draw one # for
+# every 100 of sales, and print the month number, the bar and the amount."
 for month_number, amount in enumerate(monthly_sales, start=1):
     bar = "#" * (amount // 100)                # one '#' per 100 of sales
     print("Month", month_number, bar, amount)
@@ -274,20 +326,55 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A program is a list of instructions. Python runs them top to bottom,
+#     exactly as written - including your mistakes.
+#   * print(...) shows something in the terminal. print() alone prints a blank
+#     line.
+#   * Text in quotes is printed exactly. Maths without quotes is worked out.
+#   * Lines starting with # are comments - notes for humans.
+#   * Read errors BOTTOM TO TOP: the last line says WHAT went wrong, the
+#     "line N" part says WHERE.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What does  print("3 + 4")  show? And  print(3 + 4)?
+#   Q2. You swap two print lines. What happens to the output?
+#   Q3. An error message ends with  NameError: name 'helo' is not defined.
+#       What probably went wrong?
+#   Q4. Does Python run a line that starts with #?
+#
+# ANSWERS
+#   A1. The text  3 + 4  and then the number  7.
+#   A2. The two outputs swap too. Python always goes top to bottom.
+#   A3. A typo (helo instead of hello), or text that was meant to be in quotes.
+#   A4. No. It's a comment.
+
+
+# =============================================================================
 # EXERCISES — do these before moving to lesson 01
 # =============================================================================
 #
-# EXERCISE 1
+# WARM-UP A (easy) — Hello, you
+#   Write ONE print() line that prints:  Hello, my name is <your name>
+#
+# WARM-UP B (easy) — Spacing
+#   Print two sentences with a BLANK line between them. (Hint: print() on
+#   its own prints a blank line.)
+#
+# EXERCISE 1 (easy)
 #   Below this comment block, write three print() lines that introduce
 #   yourself: your name, what you want to build with Python, and how many
 #   hours a week you plan to study.
 #
-# EXERCISE 2
+# EXERCISE 2 (easy)
 #   Make Python calculate something for you. Print the result of 15 * 24
 #   WITHOUT working it out yourself first. Then print the text "15 * 24" as
 #   literal text. Make sure you understand why the two lines differ.
 #
-# EXERCISE 3 (the important one)
+# EXERCISE 3 (medium - and the important one)
 #   Deliberately cause each of these three errors, one at a time. Run the file
 #   after each, read the message, then fix it:
 #     a) Delete a closing quote mark from any print line.   -> SyntaxError
@@ -296,7 +383,7 @@ print()
 #   Write down, in a comment, what each error message said. You are training
 #   yourself to read errors calmly.
 #
-# EXERCISE 4
+# EXERCISE 4 (easy)
 #   Change the `monthly_sales` numbers in PART 5 and re-run the file. Watch the
 #   total, average and bar chart all update by themselves. That is the point of
 #   programming: describe the process once, then change the inputs freely.
@@ -310,6 +397,14 @@ print()
 # =============================================================================
 # SOLUTIONS  (try the exercises first - genuinely)
 # =============================================================================
+#
+# WARM-UP A
+#   print("Hello, my name is Sidd")
+#
+# WARM-UP B
+#   print("I am learning Python.")
+#   print()
+#   print("It is going well.")
 #
 # EXERCISE 1
 #   print("My name is Sidd.")

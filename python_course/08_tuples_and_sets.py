@@ -3,8 +3,33 @@
  LESSON 08 — TUPLES AND SETS: TWO MORE COLLECTIONS
 ===============================================================================
 
-Time: about 50 minutes.
+Time: about 50 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-07.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. group a few values that belong together forever: a tuple     (PART 1)
+  2. keep only UNIQUE values, and check membership fast: a set    (PART 2)
+  3. compare two groups: who's in both? who's in only one?        (PART 3)
+  4. choose between list, tuple and set                           (PART 4)
+
+NEW WORDS - come back here whenever you forget one:
+
+  tuple         like a list, but in ROUND brackets and it can never change:
+                (3, 7)   ("Sidd", 22, "Mumbai")
+  immutable     "can't be changed after it's made" - tuples and strings are
+  unpacking     taking the values out of a tuple into separate names:
+                name, age = ("Sidd", 22)
+  set           a collection with NO duplicates and NO order, in curly braces:
+                {"python", "web"}
+  membership    "is this value in the collection?" - asked with  in
+  union         everything in EITHER set          a | b
+  intersection  only what's in BOTH sets          a & b
+  difference    what's in the first but NOT the second    a - b
 
 
 -------------------------------------------------------------------------------
@@ -86,7 +111,7 @@ print(f"5, 6, 7 is a {type(also_a_tuple).__name__}: {also_a_tuple}")
 print()
 
 # UNPACKING is where tuples shine. You've used it since lesson 01:
-name, age, city = person
+name, age, city = person        # name = "Sidd", age = 22, city = "Mumbai"
 print(f"{name} is {age} and lives in {city}")
 
 # Swapping is tuple packing and unpacking in disguise:
@@ -94,20 +119,22 @@ a, b = 1, 2
 a, b = b, a
 print("swapped:", a, b)
 
-# The * catches "all the rest" - useful for variable-length records:
+# OPTIONAL EXTRA - the * catches "all the rest". You won't need it often, so
+# feel free to skip these four lines:
 first, *rest = (1, 2, 3, 4, 5)
 print("first:", first, "rest:", rest)      # rest is a LIST
-
 head, *middle, tail = (1, 2, 3, 4, 5)
 print("head:", head, "middle:", middle, "tail:", tail)
 print()
 
 # RETURNING MULTIPLE VALUES - the most common everyday use of tuples.
+# (def makes a function - lesson 10. Read this as: "get_stats takes some
+# numbers and gives back THREE answers at once: lowest, highest, average".)
 def get_stats(numbers):
     """Functions return one thing - but that one thing can be a tuple."""
     return min(numbers), max(numbers), sum(numbers) / len(numbers)
 
-low, high, average = get_stats([4, 8, 15, 16, 23, 42])
+low, high, average = get_stats([4, 8, 15, 16, 23, 42])   # unpack all three
 print(f"low={low} high={high} average={average:.2f}")
 
 # You saw this in lesson 05 too: `return False, "Email is required"`.
@@ -120,9 +147,15 @@ inventory = [
     ("Gadget", 5, 12.50),
     ("Doohickey", 30, 1.25),
 ]
+# In plain English: "for each (name, qty, price) record, print the line value"
 for item_name, qty, price in inventory:
     print(f"  {item_name:<12} {qty:>3} @ {price:>6.2f} = {qty * price:>7.2f}")
 print()
+
+# TRY IT NOW (1 minute):
+#   Make a tuple  date = (2024, 12, 25).  Unpack it into year, month and day,
+#   and print an f-string:  Day 25 of month 12, 2024
+#   (Answer: year, month, day = date)
 
 
 # =============================================================================
@@ -142,7 +175,7 @@ print("{'a','b','a','c','b','a'} ->", with_repeats)
 
 # The single most common use: deduplicating a list.
 visitors = ["sidd", "ana", "sidd", "marco", "ana", "sidd"]
-unique_visitors = set(visitors)
+unique_visitors = set(visitors)         # turn the list into a set: repeats vanish
 print(f"{len(visitors)} visits from {len(unique_visitors)} unique people")
 print("unique:", unique_visitors)
 
@@ -161,7 +194,7 @@ print()
 
 # --- Modifying sets ---
 permissions = {"read"}
-permissions.add("write")                    # add one
+permissions.add("write")                    # add one  (sets use add, not append)
 permissions.update(["delete", "admin"])     # add several
 print("after adds:", sorted(permissions))
 
@@ -183,6 +216,16 @@ for filename in files:
     verdict = "process" if extension in ALLOWED_EXTENSIONS else "SKIP"
     print(f"  {filename:<14} {extension:<6} -> {verdict}")
 print()
+
+# TRY IT NOW (1 minute):
+#   Turn  [3, 1, 3, 2, 1, 3]  into a set and print it. How many items are left?
+#   (Answer: {1, 2, 3} - three items)
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. Tuples and sets are done. After the break: comparing
+#  two sets - the part that makes sets genuinely powerful.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -208,6 +251,9 @@ print("DIFFERENCE   (monday only)    :", sorted(monday - tuesday))
 print("DIFFERENCE   (tuesday only)   :", sorted(tuesday - monday))
 print("SYMMETRIC    (exactly one day):", sorted(monday ^ tuesday))
 print()
+#   A way to remember them:  |  "or"   (on Monday OR Tuesday)
+#                            &  "and"  (on Monday AND Tuesday)
+#                            -  "minus" (Monday, minus anyone from Tuesday)
 
 # Named methods do the same thing and read better in some contexts:
 print("union()       :", sorted(monday.union(tuesday)))
@@ -230,6 +276,11 @@ print("To DELETE (in db, not in upload):", sorted(in_database - in_csv_upload))
 print("To UPDATE (in both)             :", sorted(in_database & in_csv_upload))
 # Three lines. With lists and nested loops this would be twenty, and slower.
 print()
+
+# TRY IT NOW (2 minutes):
+#   likes_tea = {"ana", "sidd", "tom"}      likes_coffee = {"sidd", "zara"}
+#   Print who likes both, and who likes tea but not coffee.
+#   (Answers: {'sidd'} and {'ana', 'tom'})
 
 
 # =============================================================================
@@ -288,9 +339,9 @@ unsubscribed = {"marco@example.com", "zara@example.com"}
 # lowercasing, "Sidd@" and "SIDD@" would survive as two different entries.
 cleaned = set()
 for raw in raw_signups:
-    cleaned.add(raw.strip().lower())
+    cleaned.add(raw.strip().lower())    # tidy each address, then add it
 
-mailable = cleaned - unsubscribed
+mailable = cleaned - unsubscribed       # everyone except the unsubscribed
 
 print(f"raw entries        : {len(raw_signups)}")
 print(f"after normalising  : {len(cleaned)} unique")
@@ -315,7 +366,7 @@ print(LINE)
 
 # MISTAKE 2: expecting a set to keep order. It doesn't. If you need both
 #   uniqueness AND order, deduplicate with a loop (lesson 06 exercise 6) or
-#   use dict.fromkeys():
+#   use dict.fromkeys() - a dictionary trick you'll understand after lesson 09:
 ordered_unique = list(dict.fromkeys(["b", "a", "b", "c", "a"]))
 print("order-preserving dedupe:", ordered_unique)
 
@@ -339,37 +390,77 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A tuple (round brackets) is a fixed record:  point = (3, 7)
+#     Read it like a list; you can't change it. Unpack it:  x, y = point
+#   * A set (curly braces) keeps only unique values and has no order.
+#     set(a_list) removes duplicates in one step.
+#   * `x in a_set` is very fast - use sets for "is it allowed?" checks.
+#   * a | b (either), a & b (both), a - b (in a but not b).
+#   * An empty set is set(), NOT {} - that's an empty dictionary.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What's the difference between [1, 2] and (1, 2)?
+#   Q2. What does  set(["a", "b", "a"])  give?
+#   Q3. a = {1, 2, 3},  b = {2, 3, 4}.  What are a & b  and  a - b?
+#   Q4. Why can't you write  my_set[0]?
+#   Q5. You need to check 10,000 usernames against a banned list. List or set?
+#
+# ANSWERS
+#   A1. The list can change; the tuple can't.
+#   A2. {'a', 'b'} - the duplicate "a" disappears.
+#   A3. {2, 3} (in both) and {1} (in a but not b).
+#   A4. Sets have no order, so there's no "position 0".
+#   A5. A set - membership checks are dramatically faster.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Coordinates
+# WARM-UP A (easy) — A date as a tuple
+#   Make  today = (2024, 5, 1)  and print just the year, using today[0].
+#
+# WARM-UP B (easy) — Remove duplicates
+#   Turn [1, 2, 2, 3, 3, 3] into a set and print it.
+#
+# WARM-UP C (easy) — Is it allowed?
+#   fruits = {"apple", "banana"}.  Print whether "apple" is in it, and whether
+#   "mango" is in it.
+#
+# EXERCISE 1 (easy) — Coordinates
 #   Store three (x, y) points as tuples in a list. Loop over them, unpacking
 #   each into x and y, and print the distance of each from the origin
 #   (use (x ** 2 + y ** 2) ** 0.5). Print to 2 decimal places.
 #
-# EXERCISE 2 — Min, max and average in one go
+# EXERCISE 2 (challenge - uses def from lesson 10) — Min, max and average
 #   Write a function that takes a list of numbers and returns a tuple of
 #   (minimum, maximum, average). Call it and unpack the result into three
-#   variables.
+#   variables. Hint: copy the shape of get_stats in PART 1.
 #
-# EXERCISE 3 — Unique words
+# EXERCISE 3 (medium) — Unique words
 #   Given a sentence, print how many words it has in total and how many are
-#   unique. Then print the words that appear only once (hint: compare counts).
+#   unique. Then print the words that appear only once (hint: loop over the
+#   unique words and use words.count(word)).
 #
-# EXERCISE 4 — Two lists compared
+# EXERCISE 4 (easy) — Two lists compared
 #   last_month = ["ana", "sidd", "marco", "priya"]
 #   this_month = ["sidd", "marco", "zara", "tom"]
 #   Print: who stayed, who left, who is new, and the total distinct people.
+#   Hint: turn both into sets first.
 #
-# EXERCISE 5 — Valid extensions filter
+# EXERCISE 5 (medium) — Valid extensions filter
 #   Given a list of 10 filenames of mixed types, use a set of allowed
 #   extensions to split them into two lists: to_process and to_skip.
 #
-# EXERCISE 6 — Common interests
+# EXERCISE 6 (medium) — Common interests
 #   Three people have sets of hobbies. Print: hobbies ALL three share, hobbies
 #   at least two share, and hobbies unique to one person.
 #
-# EXERCISE 7 — Swap the data structure
+# EXERCISE 7 (medium) — Swap the data structure
 #   Take the word-frequency exercise from lesson 07 (exercise 8) and redo it
 #   using a set to track which words you've already counted. Compare how much
 #   cleaner it is than the list version.
@@ -384,10 +475,23 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   today = (2024, 5, 1)
+#   print(today[0])                    # -> 2024
+#
+# WARM-UP B
+#   print(set([1, 2, 2, 3, 3, 3]))     # -> {1, 2, 3}
+#
+# WARM-UP C
+#   fruits = {"apple", "banana"}
+#   print("apple" in fruits)           # -> True
+#   print("mango" in fruits)           # -> False
+#
 # EXERCISE 1
 #   points = [(3, 4), (1, 1), (-5, 12)]
 #   for x, y in points:
-#       print(f"({x}, {y}) -> {(x ** 2 + y ** 2) ** 0.5:.2f}")
+#       distance = (x ** 2 + y ** 2) ** 0.5     # ** 0.5 is the square root
+#       print(f"({x}, {y}) -> {distance:.2f}")
 #
 # EXERCISE 2
 #   def summarise(numbers):
@@ -400,12 +504,15 @@ print()
 #   words = sentence.split()
 #   unique = set(words)
 #   print(f"{len(words)} words, {len(unique)} unique")
-#   once = {w for w in unique if words.count(w) == 1}
-#   print("appear once:", sorted(once))
+#   once = []
+#   for word in sorted(unique):
+#       if words.count(word) == 1:
+#           once.append(word)
+#   print("appear once:", once)
 #
 # EXERCISE 4
-#   last_month = {"ana", "sidd", "marco", "priya"}
-#   this_month = {"sidd", "marco", "zara", "tom"}
+#   last_month = set(["ana", "sidd", "marco", "priya"])
+#   this_month = set(["sidd", "marco", "zara", "tom"])
 #   print("stayed:", sorted(last_month & this_month))
 #   print("left  :", sorted(last_month - this_month))
 #   print("new   :", sorted(this_month - last_month))
@@ -415,10 +522,14 @@ print()
 #   ALLOWED = {".csv", ".json", ".txt"}
 #   files = ["a.csv", "b.jpg", "c.json", "d.exe", "e.txt",
 #            "f.csv", "g.pdf", "h.txt", "i.zip", "j.json"]
-#   to_process, to_skip = [], []
+#   to_process = []
+#   to_skip = []
 #   for f in files:
 #       ext = "." + f.split(".")[-1]
-#       (to_process if ext in ALLOWED else to_skip).append(f)
+#       if ext in ALLOWED:
+#           to_process.append(f)
+#       else:
+#           to_skip.append(f)
 #   print("process:", to_process)
 #   print("skip   :", to_skip)
 #
@@ -430,6 +541,8 @@ print()
 #   at_least_two = (ana & sidd) | (sidd & marco) | (ana & marco)
 #   print("two or more:", sorted(at_least_two))
 #   print("only ana:", sorted(ana - sidd - marco))
+#   Read at_least_two as: "shared by ana and sidd, OR by sidd and marco, OR
+#   by ana and marco".
 #
 # EXERCISE 7
 #   sentence = "the cat sat on the mat the end"

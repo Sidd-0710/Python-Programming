@@ -3,8 +3,36 @@
  LESSON 14 — JSON AND CSV: THE TWO FORMATS THAT RUN THE WORLD
 ===============================================================================
 
-Time: about 75 minutes.
+Time: about 75 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-13 (especially 09 dictionaries and 13 files).
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. turn Python dicts and lists into JSON text, and back           (PART 1)
+  2. read and write JSON files, like settings files                (PART 2)
+  3. cope with broken JSON                                         (PART 3)
+  4. read spreadsheet-style CSV files                              (PART 4)
+  5. analyse a CSV, and write your own                             (PARTS 5-6)
+  6. convert between the two formats                               (PART 7)
+
+NEW WORDS - come back here whenever you forget one:
+
+  JSON          text that looks almost exactly like Python dicts and lists:
+                {"name": "Sidd", "tags": ["python"]}   - what web APIs send
+  CSV           "comma-separated values": a table as plain text, one row per
+                line - what spreadsheets export
+  serialise     turn Python data INTO text (so it can be saved or sent)
+  parse         turn text back INTO Python data
+  dump / load   the json module's words for serialise / parse
+  header row    the first line of a CSV, holding the column names
+  DictReader    reads each CSV row as a dict:  row["customer"]
+  DictWriter    writes dicts out as CSV rows
+  flat / nested flat = one level (a table); nested = dicts inside dicts.
+                CSV can only be flat. JSON can be nested.
 
 
 -------------------------------------------------------------------------------
@@ -93,6 +121,7 @@ user = {
 json_text = json.dumps(user)
 print("compact JSON:")
 print(" ", json_text)
+print("its type:", type(json_text).__name__, "  <- it's just TEXT now")
 print()
 
 # indent= makes it human-readable. sort_keys= gives a stable order, which
@@ -115,6 +144,10 @@ print("restored['name']:", restored["name"])
 print("nested access :", restored["address"]["city"])
 print("round trip identical?", restored == user)
 print()
+
+# TRY IT NOW (1 minute):
+#   Turn  {"city": "Pune", "year": 2024}  into JSON text with json.dumps and
+#   print it. Then turn the text back with json.loads and print ["year"] + 1.
 
 
 # =============================================================================
@@ -191,6 +224,7 @@ for sample in broken_samples:
         json.loads(sample)
         print(f"  {sample[:28]!r:<32} OK")
     except json.JSONDecodeError as error:
+        # error.msg says WHAT is wrong; error.pos says at which character
         print(f"  {sample[:28]!r:<32} {error.msg} (char {error.pos})")
 print()
 
@@ -222,6 +256,12 @@ print("  fix - convert first:", json.dumps({"tags": sorted({"a", "b"})}))
 print()
 
 
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. JSON is done - that's the web format. After the
+#  break: CSV, the spreadsheet format.
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
 # PART 4 — CSV: THE SPREADSHEET FORMAT
 # =============================================================================
@@ -240,8 +280,8 @@ sales_path = DATA_DIR / "sales.csv"
 # --- csv.reader: each row becomes a LIST ---
 with open(sales_path, "r", encoding="utf-8", newline="") as f:
     reader = csv.reader(f)
-    header = next(reader)               # the first row is the column names
-    first_rows = [next(reader) for _ in range(3)]
+    header = next(reader)               # next() = "give me the next row" - the header
+    first_rows = [next(reader), next(reader), next(reader)]   # the next 3 rows
 
 print("header    :", header)
 for row in first_rows:
@@ -255,7 +295,7 @@ print()
 # THIS IS THE ONE TO USE. Accessing row["customer"] instead of row[2] is
 # clearer and survives someone reordering the columns.
 with open(sales_path, "r", encoding="utf-8", newline="") as f:
-    orders = list(csv.DictReader(f))
+    orders = list(csv.DictReader(f))    # every row, as a list of dicts
 
 print(f"loaded {len(orders)} orders")
 print("first order as a dict:")
@@ -272,6 +312,10 @@ print("  quantity as text :", repr(first["quantity"]))
 print("  text * 2 (wrong) :", first["quantity"] * 2)
 print("  int() * 2 (right):", int(first["quantity"]) * 2)
 print()
+
+# TRY IT NOW (1 minute):
+#   Print the customer and the product of the SECOND order:
+#   orders[1]["customer"] and orders[1]["product"].
 
 
 # =============================================================================
@@ -292,7 +336,7 @@ def load_orders(path):
                 row["order_id"] = int(row["order_id"])
                 row["quantity"] = int(row["quantity"])
                 row["unit_price"] = float(row["unit_price"])
-                row["total"] = row["quantity"] * row["unit_price"]
+                row["total"] = row["quantity"] * row["unit_price"]   # a new column
             except ValueError as error:
                 print(f"  skipping malformed row {row.get('order_id')}: {error}")
                 continue
@@ -311,13 +355,17 @@ revenue_by_product = {}
 revenue_by_customer = {}
 
 for order in paid:
-    for field, target in (("region", revenue_by_region),
-                          ("product", revenue_by_product),
-                          ("customer", revenue_by_customer)):
-        key = order[field]
-        target[key] = target.get(key, 0) + order["total"]
+    region = order["region"]
+    product = order["product"]
+    customer = order["customer"]
+    revenue_by_region[region] = revenue_by_region.get(region, 0) + order["total"]
+    revenue_by_product[product] = revenue_by_product.get(product, 0) + order["total"]
+    revenue_by_customer[customer] = revenue_by_customer.get(customer, 0) + order["total"]
+
 
 def show(title, totals, top=None):
+    """Print a dict of name -> amount as a table, biggest first.
+    top=3 shows only the first 3 rows; top=None shows them all."""
     print(f"  {title}")
     rows = sorted(totals.items(), key=lambda pair: pair[1], reverse=True)
     for name, amount in rows[:top]:
@@ -331,7 +379,7 @@ show("Top 3 customers", revenue_by_customer, top=3)
 
 # Step 3 - some headline numbers.
 total_revenue = sum(o["total"] for o in paid)
-biggest = max(paid, key=lambda o: o["total"])
+biggest = max(paid, key=lambda o: o["total"])      # the order with the biggest total
 print(f"  Total paid revenue : {total_revenue:,.2f}")
 print(f"  Average order      : {total_revenue / len(paid):,.2f}")
 print(f"  Largest order      : #{biggest['order_id']} "
@@ -390,18 +438,17 @@ print(LINE)
 # A genuinely common task: an API gives you JSON, but your colleague wants a
 # spreadsheet. Or a CSV export needs feeding to a web service.
 
-# CSV -> JSON
+# CSV -> JSON: build a smaller dict for each order, then dump the whole list.
 json_out = WORK_DIR / "orders.json"
-slim = [
-    {
+slim = []
+for o in orders:
+    slim.append({
         "id": o["order_id"],
         "customer": o["customer"],
         "region": o["region"],
         "total": round(o["total"], 2),
-        "paid": o["status"] == "paid",
-    }
-    for o in orders
-]
+        "paid": o["status"] == "paid",          # True or False
+    })
 json_out.write_text(json.dumps(slim, indent=2), encoding="utf-8")
 print(f"CSV -> JSON: wrote {len(slim)} records to {json_out.name}")
 print("  first record:", json.dumps(slim[0]))
@@ -413,9 +460,10 @@ csv_out = WORK_DIR / "orders_from_json.csv"
 loaded = json.loads(json_out.read_text(encoding="utf-8"))
 
 with open(csv_out, "w", encoding="utf-8", newline="") as f:
+    # The column names are simply the keys of the first record.
     writer = csv.DictWriter(f, fieldnames=list(loaded[0].keys()))
     writer.writeheader()
-    writer.writerows(loaded)
+    writer.writerows(loaded)                    # write every dict at once
 
 print(f"JSON -> CSV: wrote {csv_out.name}")
 print("  first 3 lines:")
@@ -473,44 +521,84 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * json.dumps(data) -> text;  json.loads(text) -> data.
+#     json.dump / json.load do the same with FILES.
+#   * JSON keeps types: numbers stay numbers, true becomes True, null -> None.
+#   * Broken JSON raises json.JSONDecodeError - catch it.
+#   * CSV: open with newline="", read with csv.DictReader (each row a dict).
+#   * EVERY CSV value is text. Convert with int() / float() as you load.
+#   * Write CSV with csv.DictWriter - and call writeheader() first.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What does json.loads('{"n": 5}') give you? What type is its "n"?
+#   Q2. Which function reads JSON from an open FILE?
+#   Q3. A CSV row says quantity "3". What does row["quantity"] * 2 give?
+#   Q4. What does Python's None become in JSON?
+#   Q5. Why can't a nested dict go straight into a CSV?
+#
+# ANSWERS
+#   A1. The dict {'n': 5}. "n" is an int - JSON keeps number types.
+#   A2. json.load(f)  (no "s" - the "s" versions work with strings).
+#   A3. "33" - it's still text. Use int(row["quantity"]) * 2.
+#   A4. null
+#   A5. CSV is a flat table of rows and columns; it has no way to show
+#       nesting. Flatten it first (address_city, address_country...).
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — JSON round trip
-#   Build a dict describing three books (title, author, year, tags list).
+# WARM-UP A (easy) — To JSON
+#   Print  json.dumps({"name": "Sidd", "age": 22}, indent=2).
+#
+# WARM-UP B (easy) — From JSON
+#   Turn the text '{"age": 22}' into a dict with json.loads, and print the age
+#   plus 1.
+#
+# WARM-UP C (easy) — One CSV row
+#   Open data/sales.csv with csv.DictReader and print the customer of the
+#   first row.
+#
+# EXERCISE 1 (easy) — JSON round trip
+#   Build a list describing three books (title, author, year, tags list).
 #   Write it to workspace/books.json with indent=2, read it back, and print
 #   each book on one line. Confirm the year is an int, not a string.
 #
-# EXERCISE 2 — Config editor
+# EXERCISE 2 (challenge) — Config editor
 #   Load data/config.json. Write a function set_value(config, path, value)
 #   where path is like "server.port", which updates the nested value. Use it
 #   to change server.port to 9000 and features.dark_mode to False, then save.
 #
-# EXERCISE 3 — CSV summary
+# EXERCISE 3 (medium) — CSV summary
 #   From data/sales.csv, print: total units sold per product, the number of
 #   orders per status, and the month with the highest revenue (the date field
 #   starts "2024-01" etc., so slice the first 7 characters).
 #
-# EXERCISE 4 — Filtered export
+# EXERCISE 4 (medium) — Filtered export
 #   Write a new CSV into workspace/ containing only the EU orders, with columns
 #   order_id, customer, product, total - where total is quantity * unit_price
 #   rounded to 2 decimals.
 #
-# EXERCISE 5 — Per-customer report
+# EXERCISE 5 (challenge) — Per-customer report
 #   Produce a JSON file where each key is a customer name and the value is a
 #   dict with their order_count, total_spent and favourite_product.
 #
-# EXERCISE 6 — Handle a broken file
+# EXERCISE 6 (easy) — Handle a broken file
 #   Create workspace/bad.json containing invalid JSON. Write a loader that
 #   reports exactly what's wrong (message and character position) instead of
 #   crashing.
 #
-# EXERCISE 7 — Merge two CSVs
+# EXERCISE 7 (medium) — Merge two CSVs
 #   Write a second small CSV of product categories (product,category). Join it
 #   to the sales data so your report can show revenue by CATEGORY.
 #   Hint: load the categories into a dict first, then look each product up.
 #
-# EXERCISE 8 — Detect bad rows
+# EXERCISE 8 (medium) — Detect bad rows
 #   Write a validator over data/sales.csv reporting any row where: quantity
 #   isn't a positive integer, unit_price isn't a positive number, or status
 #   isn't one of paid/pending/refunded. Print a line per problem.
@@ -525,6 +613,18 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   print(json.dumps({"name": "Sidd", "age": 22}, indent=2))
+#
+# WARM-UP B
+#   data = json.loads('{"age": 22}')
+#   print(data["age"] + 1)             # -> 23 (a real int, no conversion)
+#
+# WARM-UP C
+#   with open(DATA_DIR / "sales.csv", encoding="utf-8", newline="") as f:
+#       rows = list(csv.DictReader(f))
+#   print(rows[0]["customer"])
+#
 # EXERCISE 1
 #   books = [
 #       {"title": "Dune", "author": "Herbert", "year": 1965, "tags": ["scifi"]},
@@ -538,25 +638,33 @@ print()
 #
 # EXERCISE 2
 #   def set_value(config, dotted_path, value):
-#       keys = dotted_path.split(".")
+#       keys = dotted_path.split(".")        # "server.port" -> ["server", "port"]
 #       target = config
-#       for key in keys[:-1]:
+#       for key in keys[:-1]:                # walk down every key except the last
 #           target = target[key]
-#       target[keys[-1]] = value
+#       target[keys[-1]] = value             # then set the last one
 #   cfg = json.loads((DATA_DIR / "config.json").read_text(encoding="utf-8"))
 #   set_value(cfg, "server.port", 9000)
 #   set_value(cfg, "features.dark_mode", False)
 #   (WORK_DIR / "cfg.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
 #
 # EXERCISE 3
-#   units, statuses, by_month = {}, {}, {}
+#   units = {}
+#   statuses = {}
+#   by_month = {}
 #   for o in orders:
 #       units[o["product"]] = units.get(o["product"], 0) + o["quantity"]
 #       statuses[o["status"]] = statuses.get(o["status"], 0) + 1
-#       month = o["date"][:7]
+#       month = o["date"][:7]                # "2024-01-15" -> "2024-01"
 #       by_month[month] = by_month.get(month, 0) + o["total"]
 #   print(units, statuses)
-#   print(max(by_month, key=by_month.get))
+#   best_month = ""
+#   best_total = 0
+#   for month, total in by_month.items():
+#       if total > best_total:
+#           best_month = month
+#           best_total = total
+#   print(best_month)
 #
 # EXERCISE 4
 #   eu = [o for o in orders if o["region"] == "EU"]
@@ -570,14 +678,23 @@ print()
 # EXERCISE 5
 #   report = {}
 #   for o in orders:
-#       entry = report.setdefault(o["customer"],
-#                                 {"order_count": 0, "total_spent": 0.0, "products": {}})
+#       name = o["customer"]
+#       if name not in report:
+#           report[name] = {"order_count": 0, "total_spent": 0.0, "products": {}}
+#       entry = report[name]
 #       entry["order_count"] += 1
 #       entry["total_spent"] = round(entry["total_spent"] + o["total"], 2)
-#       entry["products"][o["product"]] = entry["products"].get(o["product"], 0) + 1
+#       product = o["product"]
+#       entry["products"][product] = entry["products"].get(product, 0) + 1
 #   for name, entry in report.items():
-#       entry["favourite_product"] = max(entry["products"], key=entry["products"].get)
-#       del entry["products"]
+#       favourite = ""
+#       favourite_count = 0
+#       for product, count in entry["products"].items():
+#           if count > favourite_count:
+#               favourite = product
+#               favourite_count = count
+#       entry["favourite_product"] = favourite
+#       del entry["products"]                # a working field - not needed in the output
 #   (WORK_DIR / "customers.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 #
 # EXERCISE 6
@@ -592,8 +709,10 @@ print()
 #   cat_path = WORK_DIR / "categories.csv"
 #   cat_path.write_text("product,category\nWidget,Hardware\nGadget,Hardware\n"
 #                       "Doohickey,Consumable\nSprocket,Machinery\n", encoding="utf-8")
+#   categories = {}
 #   with open(cat_path, encoding="utf-8", newline="") as f:
-#       categories = {r["product"]: r["category"] for r in csv.DictReader(f)}
+#       for r in csv.DictReader(f):
+#           categories[r["product"]] = r["category"]
 #   by_category = {}
 #   for o in paid:
 #       cat = categories.get(o["product"], "Unknown")
@@ -603,6 +722,7 @@ print()
 # EXERCISE 8
 #   VALID_STATUSES = {"paid", "pending", "refunded"}
 #   with open(sales_path, encoding="utf-8", newline="") as f:
+#       # start=2 because line 1 of the file is the header
 #       for line_no, row in enumerate(csv.DictReader(f), start=2):
 #           problems = []
 #           if not row["quantity"].isdigit() or int(row["quantity"]) <= 0:

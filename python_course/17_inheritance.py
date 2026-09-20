@@ -3,8 +3,42 @@
  LESSON 17 — INHERITANCE AND POLYMORPHISM
 ===============================================================================
 
-Time: about 70 minutes.
+Time: about 70 minutes (there's a good place for a break halfway).
 Assumes: lesson 16.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. build a new class ON TOP of an existing one                  (PART 1)
+  2. treat different classes the same way in one loop             (PART 2)
+  3. understand "duck typing" - Python's relaxed approach         (PART 3)
+  4. force subclasses to provide certain methods                  (PART 4)
+  5. choose between inheriting and simply HOLDING another object  (PART 5)
+
+NEW WORDS - come back here whenever you forget one:
+
+  inheritance   a class getting everything from another class, then adding
+                or changing bits:  class Manager(Employee):
+  parent class  the class being inherited FROM (also "base class")
+  child class   the class that inherits (also "subclass")
+  override      a child writing its own version of a parent's method
+  super()       "the parent class" - used to run the parent's version of a
+                method from inside the child
+  polymorphism  "many forms": different classes answering the same method
+                call, each in its own way
+  isinstance()  "is this object this kind of thing (or a child of it)?"
+  duck typing   "if it has the method I need, I don't care what class it is"
+  abstract      a parent class that's only a template - it can't be used on
+                its own, only through its children
+  composition   an object HOLDING another object as an attribute (a Car
+                holds an Engine) instead of inheriting from it
+
+WHY THIS MATTERS FOR YOU: every FastAPI data model starts with
+class Something(BaseModel):  - that's inheritance. Pydantic's BaseModel is the
+parent; your class gets all its validation powers for free.
 
 
 -------------------------------------------------------------------------------
@@ -81,15 +115,18 @@ class Employee:
         raise NotImplementedError("each employee type must define its own pay")
 
     def __repr__(self):
+        # type(self).__name__ is the name of the object's actual class
         return f"{type(self).__name__}({self.name!r})"
 
 
+# (Employee) in brackets means "start with everything Employee has".
 class SalariedEmployee(Employee):
     """A child class. Inherits everything, adds and overrides some."""
 
     def __init__(self, name, employee_id, annual_salary):
         # super() calls the PARENT's version. Do this first so the shared
         # setup still happens - otherwise self.name would never be set.
+        # In plain English: "do the normal Employee setup, then add my salary".
         super().__init__(name, employee_id)
         self.annual_salary = annual_salary
 
@@ -107,8 +144,8 @@ class HourlyEmployee(Employee):
         self.hours_worked = hours_worked
 
     def calculate_pay(self):
-        normal = min(self.hours_worked, 160)
-        overtime = max(self.hours_worked - 160, 0)
+        normal = min(self.hours_worked, 160)          # at most 160 normal hours
+        overtime = max(self.hours_worked - 160, 0)    # anything above 160 (never below 0)
         return round(normal * self.hourly_rate
                      + overtime * self.hourly_rate * self.OVERTIME_MULTIPLIER, 2)
 
@@ -127,8 +164,8 @@ class Manager(SalariedEmployee):
 
     def calculate_pay(self):
         """EXTENDING rather than replacing: call the parent, then add to it."""
-        base = super().calculate_pay()
-        return round(base * (1 + self.bonus_rate), 2)
+        base = super().calculate_pay()            # the SalariedEmployee pay...
+        return round(base * (1 + self.bonus_rate), 2)   # ...plus a bonus
 
     def describe(self):
         """Extending the parent's describe() too."""
@@ -150,6 +187,11 @@ print("  inherited class attribute:", marco.company)
 print("  inherited __repr__      :", repr(marco))
 print()
 
+# TRY IT NOW (2 minutes):
+#   Create  intern = HourlyEmployee("Priya", "E005", 15.00, hours_worked=80)
+#   and print intern.describe() and intern.calculate_pay().
+#   (describe() comes from Employee; calculate_pay() from HourlyEmployee.)
+
 
 # =============================================================================
 # PART 2 — POLYMORPHISM IN ACTION
@@ -165,7 +207,7 @@ total = 0
 print(f"  {'Employee':<12}{'Type':<20}{'Pay':>12}")
 print("  " + "-" * 44)
 for person in payroll:
-    pay = person.calculate_pay()
+    pay = person.calculate_pay()        # each person uses THEIR OWN version
     total += pay
     print(f"  {person.name:<12}{type(person).__name__:<20}{pay:>12,.2f}")
 print("  " + "-" * 44)
@@ -181,11 +223,18 @@ print("  isinstance(sidd, Manager)          :", isinstance(sidd, Manager))
 print("  isinstance(sidd, SalariedEmployee) :", isinstance(sidd, SalariedEmployee))
 print("  isinstance(sidd, Employee)         :", isinstance(sidd, Employee))
 print("  isinstance(marco, Manager)         :", isinstance(marco, Manager))
-print("  the chain:", " -> ".join(c.__name__ for c in type(sidd).__mro__))
-# __mro__ is the "method resolution order": exactly where Python looks, in
+
+# OPTIONAL - the "method resolution order": exactly where Python looks, in
 # order, when you call a method. Useful when you're confused about which
-# version ran.
+# version ran. You can skip this line for now.
+print("  the chain:", " -> ".join(c.__name__ for c in type(sidd).__mro__))
 print()
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. Inheritance and polymorphism - the core of this
+#  lesson - are done. After the break: other ways to share behaviour.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -199,19 +248,24 @@ print(LINE)
 #
 # Python does not require a shared parent class for polymorphism. It only cares
 # that the method EXISTS at call time. These two classes are unrelated, yet
-# interchangeable:
+# interchangeable - they both have an export() method:
 
 
 class CsvExporter:
     def export(self, rows):
-        return "\n".join(",".join(str(cell) for cell in row) for row in rows)
+        lines = []
+        for row in rows:
+            lines.append(",".join(str(cell) for cell in row))
+        return "\n".join(lines)
 
 
 class MarkdownExporter:
     def export(self, rows):
-        lines = ["| " + " | ".join(str(c) for c in rows[0]) + " |",
-                 "|" + "---|" * len(rows[0])]
-        lines += ["| " + " | ".join(str(c) for c in row) + " |" for row in rows[1:]]
+        header = rows[0]
+        lines = ["| " + " | ".join(str(c) for c in header) + " |",
+                 "|" + "---|" * len(header)]
+        for row in rows[1:]:
+            lines.append("| " + " | ".join(str(c) for c in row) + " |")
         return "\n".join(lines)
 
 
@@ -249,6 +303,8 @@ class PaymentMethod(ABC):
     def __init__(self, owner):
         self.owner = owner
 
+    # @abstractmethod marks a method children MUST write themselves. The body
+    # here is just a docstring - the parent deliberately doesn't implement it.
     @abstractmethod
     def charge(self, amount):
         """Subclasses MUST implement this."""
@@ -329,11 +385,11 @@ class Car:
 
     def __init__(self, model, engine, gps=None):
         self.model = model
-        self.engine = engine          # composition
+        self.engine = engine          # composition: an Engine object inside the Car
         self.gps = gps                # an OPTIONAL part
 
     def start(self):
-        return f"{self.model}: {self.engine.start()}"
+        return f"{self.model}: {self.engine.start()}"     # ask the engine to do it
 
     def navigate(self, destination):
         if self.gps is None:
@@ -400,38 +456,80 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * class Child(Parent):  inherits every attribute and method of Parent.
+#   * A child can OVERRIDE a method by defining one with the same name.
+#   * super().__init__(...) runs the parent's setup - always call it.
+#     super().method() runs the parent's version, so you can extend it.
+#   * Polymorphism: loop over mixed objects and call the same method on each.
+#   * isinstance(obj, Parent) is True for children too.
+#   * Duck typing: Python only needs the method to exist.
+#   * ABC + @abstractmethod force children to write certain methods.
+#   * IS-A -> inherit.  HAS-A -> hold it as an attribute (composition).
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What does  class Manager(Employee):  mean?
+#   Q2. Why must a child's __init__ call super().__init__(...)?
+#   Q3. A Manager is passed to  isinstance(x, Employee).  True or False?
+#   Q4. A Car and an Engine - inheritance or composition?
+#   Q5. What happens if you try to create an object from an abstract class?
+#
+# ANSWERS
+#   A1. Manager is a new class that starts with everything Employee has.
+#   A2. Otherwise the parent's setup (self.name etc.) never runs, and those
+#       attributes don't exist.
+#   A3. True - a Manager IS an Employee.
+#   A4. Composition. A car HAS an engine; it isn't a kind of engine.
+#   A5. TypeError - abstract classes are templates, not usable objects.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Shapes
+# WARM-UP A (easy) — Override one method
+#   Write class Animal with a speak() method returning "...". Write
+#   class Dog(Animal) whose speak() returns "Woof". Print Dog().speak().
+#
+# WARM-UP B (easy) — One loop, two kinds
+#   Loop over [Animal(), Dog()] and print each one's speak().
+#
+# WARM-UP C (easy) — isinstance
+#   Print isinstance(Dog(), Animal) and isinstance(Animal(), Dog).
+#   Make sure you can explain both answers.
+#
+# EXERCISE 1 (medium) — Shapes
 #   Write a Shape base class with an abstract area() and perimeter(). Implement
 #   Circle, Rectangle and Triangle. Loop over a list of mixed shapes, printing
 #   each one's name and area, sorted by area.
 #
-# EXERCISE 2 — Extend the payroll
+# EXERCISE 2 (easy) — Extend the payroll
 #   Add a ContractorEmployee (paid a fixed day rate for days worked) to PART 1.
 #   Confirm the PART 2 report loop needs no changes at all.
 #
-# EXERCISE 3 — Notification system
+# EXERCISE 3 (medium) — Notification system
 #   Abstract Notifier with send(message). Implement EmailNotifier,
-#   SmsNotifier and SlackNotifier (each just prints what it would do). Write
+#   SmsNotifier and SlackNotifier (each just returns what it would do). Write
 #   notify_all(notifiers, message) that uses them polymorphically.
 #
-# EXERCISE 4 — Animal hierarchy done properly
+# EXERCISE 4 (medium) — Animal hierarchy done properly
 #   Animal -> Dog, Cat, Bird. Each overrides speak() and move(). Bird also has
 #   can_fly. Show it working, then argue whether Penguin should inherit from
 #   Bird - and what you'd do about fly().
 #
-# EXERCISE 5 — Composition refactor
+# EXERCISE 5 (challenge) — Composition refactor
 #   Take the Cart from lesson 16 and extract the pricing rules into a separate
 #   PricingPolicy object that the Cart holds. Then create two policies
 #   (standard and black-friday) and swap between them on the same cart.
 #
-# EXERCISE 6 — Duck typing
+# EXERCISE 6 (medium) — Duck typing
 #   Write three unrelated classes that each have a `.to_dict()` method. Write
 #   one function that serialises any of them to JSON. No shared parent.
 #
-# EXERCISE 7 — Read the MRO
+# EXERCISE 7 (challenge) — Read the MRO
 #   Build a small diamond: A, then B(A) and C(A), then D(B, C). Give each a
 #   method with the same name and print D().method() plus D.__mro__. Work out
 #   why that particular version ran.
@@ -446,27 +544,53 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   class Animal:
+#       def speak(self):
+#           return "..."
+#   class Dog(Animal):
+#       def speak(self):
+#           return "Woof"
+#   print(Dog().speak())               # -> Woof
+#
+# WARM-UP B
+#   for creature in [Animal(), Dog()]:
+#       print(creature.speak())        # -> ...   then   Woof
+#
+# WARM-UP C
+#   print(isinstance(Dog(), Animal))   # -> True  (a Dog IS an Animal)
+#   print(isinstance(Animal(), Dog))   # -> False (not every Animal is a Dog)
+#
 # EXERCISE 1
 #   from abc import ABC, abstractmethod
 #   import math
 #   class Shape(ABC):
 #       @abstractmethod
-#       def area(self): ...
+#       def area(self):
+#           ...
 #       @abstractmethod
-#       def perimeter(self): ...
-#       def __repr__(self):
-#           return f"{type(self).__name__}(area={self.area():.2f})"
+#       def perimeter(self):
+#           ...
+#   (`...` - three dots - is a real Python value meaning "nothing here yet".
+#    It's a common placeholder body for abstract methods.)
 #   class Circle(Shape):
-#       def __init__(self, radius): self.radius = radius
-#       def area(self): return math.pi * self.radius ** 2
-#       def perimeter(self): return 2 * math.pi * self.radius
+#       def __init__(self, radius):
+#           self.radius = radius
+#       def area(self):
+#           return math.pi * self.radius ** 2
+#       def perimeter(self):
+#           return 2 * math.pi * self.radius
 #   class Rectangle(Shape):
-#       def __init__(self, w, h): self.w, self.h = w, h
-#       def area(self): return self.w * self.h
-#       def perimeter(self): return 2 * (self.w + self.h)
+#       def __init__(self, width, height):
+#           self.width = width
+#           self.height = height
+#       def area(self):
+#           return self.width * self.height
+#       def perimeter(self):
+#           return 2 * (self.width + self.height)
 #   shapes = [Circle(3), Rectangle(4, 5)]
-#   for s in sorted(shapes, key=lambda s: s.area()):
-#       print(type(s).__name__, round(s.area(), 2))
+#   for shape in sorted(shapes, key=lambda s: s.area()):
+#       print(type(shape).__name__, round(shape.area(), 2))
 #
 # EXERCISE 2
 #   class ContractorEmployee(Employee):
@@ -482,13 +606,19 @@ print()
 # EXERCISE 3
 #   class Notifier(ABC):
 #       @abstractmethod
-#       def send(self, message): ...
+#       def send(self, message):
+#           ...
 #   class EmailNotifier(Notifier):
-#       def send(self, message): return f"EMAIL: {message}"
+#       def send(self, message):
+#           return f"EMAIL: {message}"
 #   class SmsNotifier(Notifier):
-#       def send(self, message): return f"SMS: {message[:160]}"
+#       def send(self, message):
+#           return f"SMS: {message[:160]}"      # texts are short
 #   def notify_all(notifiers, message):
-#       return [n.send(message) for n in notifiers]
+#       results = []
+#       for notifier in notifiers:
+#           results.append(notifier.send(message))
+#       return results
 #
 # EXERCISE 4
 #   Penguin(Bird) is the classic argument against naive inheritance: it IS a
@@ -504,12 +634,16 @@ print()
 #
 # EXERCISE 7
 #   class A:
-#       def who(self): return "A"
+#       def who(self):
+#           return "A"
 #   class B(A):
-#       def who(self): return "B"
+#       def who(self):
+#           return "B"
 #   class C(A):
-#       def who(self): return "C"
-#   class D(B, C): pass
+#       def who(self):
+#           return "C"
+#   class D(B, C):
+#       pass
 #   print(D().who())            # -> "B"
 #   print([c.__name__ for c in D.__mro__])   # D, B, C, A, object
 #   # Python searches left to right across the bases, so B wins.

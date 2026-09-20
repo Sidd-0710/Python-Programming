@@ -3,11 +3,38 @@
  LESSON 09 — DICTIONARIES: LOOKING THINGS UP BY NAME
 ===============================================================================
 
-Time: about 80 minutes.
+Time: about 80 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-08.
 
 This is the most important data structure in Python. If you only truly master
 one thing from this course, make it this lesson.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. store values under NAMES instead of positions: a dictionary  (PART 1)
+  2. read a value safely, even when it might be missing            (PART 2)
+  3. add, change and remove entries                                (PART 3)
+  4. loop over names and values together                           (PART 4)
+  5. count things, and group things - the two big patterns         (PART 5)
+  6. dig through nested data - exactly what web APIs send          (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  dictionary    a collection of NAME -> VALUE pairs, in curly braces:
+                {"name": "Sidd", "age": 22}      ("dict" for short)
+  key           the name you look up by:  "name"
+  value         what you get back:        "Sidd"
+  pair          one key together with its value:  "age": 22
+  KeyError      the error you get when you ask for a key that isn't there
+  .get()        a safe lookup that gives a default instead of crashing
+  .items()      gives you every (key, value) pair, ready to loop over
+  nested        a dict or list INSIDE another dict or list
+  JSON          the text format web APIs use. It turns into dicts and lists
+                in Python - so this lesson IS the web data lesson
 
 
 -------------------------------------------------------------------------------
@@ -58,6 +85,13 @@ contacts app (look up a name, get a number), or a labelled filing cabinet.
 LINE = "-" * 70
 
 
+# A small helper used for sorting later in this lesson.
+# (def makes a function - lesson 10. Read this as: "value_of takes a
+# (key, value) pair and gives back the value part".)
+def value_of(pair):
+    return pair[1]
+
+
 # =============================================================================
 # PART 1 — CREATING AND READING
 # =============================================================================
@@ -74,7 +108,7 @@ user = {
 }
 
 print("the whole dict:", user)
-print("user['name'] :", user["name"])
+print("user['name'] :", user["name"])       # look up by the key "name"
 print("user['age']  :", user["age"])
 print("len(user)    :", len(user), "pairs")
 print()
@@ -91,7 +125,8 @@ print("mixed keys:", mixed_keys)
 print("looked up by tuple:", mixed_keys[(0, 0)])
 print()
 
-# Other ways to build one:
+# OPTIONAL - other ways to build one. You'll mostly just use { } like above,
+# so don't worry about memorising these:
 empty = {}                                          # empty dict
 from_pairs = dict([("a", 1), ("b", 2)])             # from a list of tuples
 from_kwargs = dict(name="Ana", age=30)              # keyword style
@@ -100,6 +135,10 @@ print("from_pairs :", from_pairs)
 print("from_kwargs:", from_kwargs)
 print("from_zip   :", from_zip)
 print()
+
+# TRY IT NOW (1 minute):
+#   Make a dict  book = {"title": "Dune", "author": "Frank Herbert"}  and print
+#   just the author.  (Answer: print(book["author"]))
 
 
 # =============================================================================
@@ -120,6 +159,7 @@ print(LINE)
 print("user.get('phone')          :", user.get("phone"))
 
 # .get() with a fallback value - this is the one you'll use constantly:
+# In plain English: "give me the phone, or 'n/a' if there isn't one"
 print("user.get('phone', 'n/a')   :", user.get("phone", "n/a"))
 print("user.get('name', 'n/a')    :", user.get("name", "n/a"))
 
@@ -142,6 +182,10 @@ print(f"  by {api_response.get('author', 'anonymous')}")
 print(f"  tags: {api_response.get('tags', [])}")          # safe default: []
 print(f"  views: {api_response.get('views', 0):,}")       # safe default: 0
 print()
+
+# TRY IT NOW (1 minute):
+#   Using your book dict, print book.get("year", "unknown").
+#   Then try book["year"] and read the KeyError. Then delete that line.
 
 
 # =============================================================================
@@ -201,6 +245,7 @@ print()
 
 # .items() gives (key, value) tuples - USE THIS ONE. It's what you want 95%
 # of the time, and it unpacks neatly into two named variables.
+# In plain English: "for each product and its quantity..."
 print("items:")
 for product, quantity in inventory.items():
     status = "IN STOCK" if quantity > 0 else "OUT OF STOCK"
@@ -213,16 +258,27 @@ for product, quantity in sorted(inventory.items()):
     print(f"  {product:<12} {quantity:>3}")
 
 print("\nsorted by quantity, highest first:")
-for product, quantity in sorted(inventory.items(),
-                                key=lambda pair: pair[1],
-                                reverse=True):
+for product, quantity in sorted(inventory.items(), key=value_of, reverse=True):
     print(f"  {product:<12} {quantity:>3}")
-# `lambda pair: pair[1]` means "sort by the second element of each pair", i.e.
-# the value rather than the key. Lesson 10 explains lambda.
+# key=value_of means "sort the pairs by their VALUE, not their name" - using
+# the little helper function defined at the top of this file.
+# You'll often see the same thing written as  key=lambda pair: pair[1]
+# (a lambda is a one-line function - lesson 10).
 
 # Dictionaries keep insertion order (guaranteed since Python 3.7). They are not
 # sorted - they simply remember the order you added things in.
 print()
+
+# TRY IT NOW (2 minutes):
+#   Loop over  prices = {"tea": 1.5, "cake": 3.0}  with .items() and print
+#   lines like:  tea costs 1.50
+#   (Answer: for item, price in prices.items(): print(f"{item} costs {price:.2f}"))
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You now know how to build, read, change and loop
+#  over dictionaries. After the break: the patterns that make them powerful.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -244,9 +300,15 @@ for word in words:
     counts[word] = counts.get(word, 0) + 1
 
 print("word counts:", counts)
+#   Step by step for the first few words:
+#     "the" -> counts.get("the", 0) is 0, so counts["the"] = 1
+#     "cat" -> counts["cat"] = 1
+#     "sat" -> counts["sat"] = 1
+#     "on"  -> counts["on"]  = 1
+#     "the" -> counts.get("the", 0) is 1 now, so counts["the"] = 2
 
 print("\nmost frequent first:")
-for word, count in sorted(counts.items(), key=lambda pair: pair[1], reverse=True):
+for word, count in sorted(counts.items(), key=value_of, reverse=True):
     bar = "#" * count
     print(f"  {word:<8} {count}  {bar}")
 print()
@@ -272,18 +334,23 @@ by_city = {}
 for name, city in people:
     if city not in by_city:
         by_city[city] = []              # create the empty list on first sight
-    by_city[city].append(name)
+    by_city[city].append(name)          # then add this person to their city
 
 print("grouped by city:")
 for city, residents in sorted(by_city.items()):
     print(f"  {city:<8} ({len(residents)}): {', '.join(residents)}")
 
-# setdefault() does the "create if missing" step in one line:
+# OPTIONAL - setdefault() does the "create if missing" step in one line. The
+# longer if-version above is just as good; use whichever reads better to you.
 by_city2 = {}
 for name, city in people:
     by_city2.setdefault(city, []).append(name)
 print("same result via setdefault:", by_city2 == by_city)
 print()
+
+# TRY IT NOW (2 minutes):
+#   Count the colours in  ["red", "blue", "red", "green", "red"]  using the
+#   counting pattern.  (Answer: {'red': 3, 'blue': 1, 'green': 1})
 
 
 # =============================================================================
@@ -329,16 +396,20 @@ total_views = 0
 all_tags = set()
 
 print("Posts:")
-for post in blog["posts"]:
+for post in blog["posts"]:                  # each post is a dict
     total_views += post["views"]
-    all_tags.update(post["tags"])
+    all_tags.update(post["tags"])           # add this post's tags to the set
     print(f"  [{post['id']}] {post['title']:<20} {post['views']:>6,} views")
 
 print(f"\nTotal views : {total_views:,}")
 print(f"Average     : {total_views / len(blog['posts']):,.0f}")
 print(f"All tags    : {sorted(all_tags)}")
 
-most_popular = max(blog["posts"], key=lambda post: post["views"])
+# Finding the most popular post: remember the "best so far" loop (lesson 07).
+most_popular = blog["posts"][0]
+for post in blog["posts"]:
+    if post["views"] > most_popular["views"]:
+        most_popular = post
 print(f"Most popular: {most_popular['title']} ({most_popular['views']:,})")
 print()
 
@@ -346,6 +417,10 @@ print()
 # quote style inside the braces, which is why you'll see {post['id']} with
 # single quotes inside a double-quoted f-string. Modern Python (3.12+) allows
 # either, but the mixed style is still the safest habit.
+
+# TRY IT NOW (1 minute):
+#   Print the author's email from blog, and the title of the LAST post.
+#   (Answers: blog["author"]["email"]  and  blog["posts"][-1]["title"])
 
 
 # =============================================================================
@@ -386,13 +461,11 @@ for status, count in sorted(orders_by_status.items()):
     print(f"  {status:<10} {count}")
 
 print("\nPaid revenue by region:")
-for region, amount in sorted(revenue_by_region.items(),
-                             key=lambda pair: pair[1], reverse=True):
+for region, amount in sorted(revenue_by_region.items(), key=value_of, reverse=True):
     print(f"  {region:<4} {amount:>10,.2f}")
 
 print("\nTop customers:")
-for customer, amount in sorted(spend_by_customer.items(),
-                               key=lambda pair: pair[1], reverse=True):
+for customer, amount in sorted(spend_by_customer.items(), key=value_of, reverse=True):
     print(f"  {customer:<8} {amount:>10,.2f}")
 
 paid_total = sum(revenue_by_region.values())
@@ -447,50 +520,97 @@ print("a is not affected by c:", a)
 #   Chain .get() with defaults when the data is untrusted:
 data = {"user": {"name": "Sidd"}}
 city = data.get("user", {}).get("address", {}).get("city", "unknown")
+#   Step by step: get "user" (or an empty dict), then from THAT get "address"
+#   (or an empty dict), then from THAT get "city" (or "unknown"). Each step
+#   has a safe fallback, so nothing can crash.
 print("safely dug out city:", city)
 print()
+
+
+# =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A dict maps keys to values:  user = {"name": "Sidd", "age": 22}
+#   * user["name"] reads a value. A missing key -> KeyError.
+#   * user.get("phone", "n/a") reads safely, with a default.
+#   * user["city"] = "Pune" adds OR updates. del / .pop() remove.
+#   * for key, value in d.items():  loops over every pair.
+#   * COUNTING:  counts[x] = counts.get(x, 0) + 1
+#   * GROUPING:  if key not in groups: groups[key] = []  then .append()
+#   * Nested data (dicts in lists in dicts) is what JSON / APIs look like.
+#     Dig in one step at a time:  blog["posts"][0]["title"]
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. d = {"a": 1}.  What does d["b"] do? And d.get("b", 0)?
+#   Q2. How do you change a's value to 5?
+#   Q3. What does  "a" in d  check - keys or values?
+#   Q4. What does this leave in counts?  counts = {} then for x in "aab":
+#       counts[x] = counts.get(x, 0) + 1
+#   Q5. How do you read "Deploying Flask" from the blog dict?
+#
+# ANSWERS
+#   A1. KeyError.  0.
+#   A2. d["a"] = 5
+#   A3. Keys.
+#   A4. {'a': 2, 'b': 1}
+#   A5. blog["posts"][2]["title"]  (or blog["posts"][-1]["title"])
 
 
 # =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Contact card
+# WARM-UP A (easy) — A book
+#   Make a dict with "title" and "author" for your favourite book. Print the
+#   title.
+#
+# WARM-UP B (easy) — Add a key
+#   Add a "year" key to your book dict, then print the whole dict.
+#
+# WARM-UP C (easy) — Loop it
+#   Loop over your book dict with .items() and print each line as
+#   key: value
+#
+# EXERCISE 1 (easy) — Contact card
 #   Build a dict describing you (name, age, city, skills as a list). Print each
 #   key and value on its own line using .items(). Then add a new key, change an
 #   existing one, and delete one.
 #
-# EXERCISE 2 — Phone book
+# EXERCISE 2 (easy) — Phone book
 #   Create a phone book dict. Write code that looks up a name and prints the
 #   number, or "not found" if it's missing - without crashing.
 #
-# EXERCISE 3 — Letter frequency
+# EXERCISE 3 (medium) — Letter frequency
 #   Count how many times each LETTER appears in "mississippi river". Ignore
 #   spaces. Print the results sorted by count, highest first.
+#   Hint: the counting pattern, then sort with key=value_of.
 #
-# EXERCISE 4 — Grade book
+# EXERCISE 4 (medium) — Grade book
 #   grades = {"Ana": [88, 92, 79], "Sidd": [95, 68, 84], "Marco": [72, 75, 91]}
 #   For each student print their average to 1dp and their best score. Then
 #   print the name of the student with the highest overall average.
 #
-# EXERCISE 5 — Group by first letter
+# EXERCISE 5 (medium) — Group by first letter
 #   Given a list of 10+ names, build a dict mapping each first letter to the
 #   list of names starting with it. Print it sorted by letter.
+#   Hint: the grouping pattern from PART 5, using name[0] as the key.
 #
-# EXERCISE 6 — Shopping cart (web backend practice)
+# EXERCISE 6 (medium) — Shopping cart (web backend practice)
 #   cart = {"apple": 3, "bread": 1, "cheese": 2}
 #   prices = {"apple": 0.50, "bread": 2.20, "cheese": 4.75, "milk": 1.10}
 #   Print a receipt with a line per item (qty, unit price, line total) and a
 #   grand total. Handle gracefully the case where a cart item has no price.
 #
-# EXERCISE 7 — API response digging
+# EXERCISE 7 (medium) — API response digging
 #   Using the `blog` dict from PART 6:
 #     a) print every post title that has the tag "python"
 #     b) print the total number of distinct tags
 #     c) print posts sorted by views, lowest first
 #     d) add a new post to the list, then re-run your total-views calculation
 #
-# EXERCISE 8 — Invert a dictionary
+# EXERCISE 8 (challenge) — Invert a dictionary
 #   Given {"a": 1, "b": 2, "c": 3}, produce {1: "a", 2: "b", 3: "c"}.
 #   Then think about what happens if two keys share a value, and handle it by
 #   making the inverted values lists.
@@ -505,14 +625,26 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   book = {"title": "Dune", "author": "Frank Herbert"}
+#   print(book["title"])
+#
+# WARM-UP B
+#   book["year"] = 1965
+#   print(book)
+#
+# WARM-UP C
+#   for key, value in book.items():
+#       print(f"{key}: {value}")
+#
 # EXERCISE 1
 #   me = {"name": "Sidd", "age": 22, "city": "Mumbai",
 #         "skills": ["python", "sql"]}
 #   for key, value in me.items():
 #       print(f"{key:<8}: {value}")
-#   me["country"] = "India"
-#   me["age"] = 23
-#   del me["city"]
+#   me["country"] = "India"            # add
+#   me["age"] = 23                     # change
+#   del me["city"]                     # delete
 #
 # EXERCISE 2
 #   book = {"Ana": "555-0101", "Sidd": "555-0102"}
@@ -524,25 +656,30 @@ print()
 #   freq = {}
 #   for letter in text:
 #       freq[letter] = freq.get(letter, 0) + 1
-#   for letter, count in sorted(freq.items(), key=lambda p: p[1], reverse=True):
+#   for letter, count in sorted(freq.items(), key=value_of, reverse=True):
 #       print(f"{letter}: {count}")
 #
 # EXERCISE 4
 #   grades = {"Ana": [88, 92, 79], "Sidd": [95, 68, 84], "Marco": [72, 75, 91]}
-#   averages = {}
+#   top_student = ""
+#   top_average = 0
 #   for student, scores in grades.items():
 #       avg = sum(scores) / len(scores)
-#       averages[student] = avg
 #       print(f"{student:<6} avg {avg:.1f} best {max(scores)}")
-#   top = max(averages, key=averages.get)
-#   print("Top student:", top)
+#       if avg > top_average:            # the "best so far" pattern
+#           top_student = student
+#           top_average = avg
+#   print("Top student:", top_student)
 #
 # EXERCISE 5
 #   names = ["Ana", "Sidd", "Sam", "Marco", "Mia", "Priya",
 #            "Zara", "Alex", "Pete", "Sara"]
 #   by_letter = {}
 #   for name in names:
-#       by_letter.setdefault(name[0].upper(), []).append(name)
+#       letter = name[0].upper()
+#       if letter not in by_letter:
+#           by_letter[letter] = []
+#       by_letter[letter].append(name)
 #   for letter, group in sorted(by_letter.items()):
 #       print(letter, group)
 #
@@ -551,7 +688,7 @@ print()
 #   prices = {"apple": 0.50, "bread": 2.20, "cheese": 4.75, "milk": 1.10}
 #   total = 0
 #   for item, qty in cart.items():
-#       unit = prices.get(item)
+#       unit = prices.get(item)            # None if there's no price
 #       if unit is None:
 #           print(f"{item:<8} NO PRICE - skipped")
 #           continue
@@ -561,26 +698,40 @@ print()
 #   print(f"{'TOTAL':<8} {total:>19.2f}")
 #
 # EXERCISE 7
+#   # a)
 #   for post in blog["posts"]:
 #       if "python" in post["tags"]:
 #           print(post["title"])
+#   # b)
 #   tags = set()
 #   for post in blog["posts"]:
 #       tags.update(post["tags"])
 #   print(len(tags), "distinct tags")
-#   for post in sorted(blog["posts"], key=lambda p: p["views"]):
+#   # c)
+#   def views_of(post):
+#       return post["views"]
+#   for post in sorted(blog["posts"], key=views_of):
 #       print(post["views"], post["title"])
+#   # d)
+#   blog["posts"].append({"id": 4, "title": "New Post", "views": 10, "tags": []})
+#   (then run your total_views loop again)
 #
 # EXERCISE 8
 #   original = {"a": 1, "b": 2, "c": 3}
-#   inverted = {value: key for key, value in original.items()}
-#   print(inverted)
-#   # with collision handling:
+#   inverted = {}
+#   for key, value in original.items():
+#       inverted[value] = key            # the value becomes the key
+#   print(inverted)                      # {1: 'a', 2: 'b', 3: 'c'}
+#   # with collision handling - the grouping pattern:
 #   original2 = {"a": 1, "b": 2, "c": 1}
 #   grouped = {}
 #   for key, value in original2.items():
-#       grouped.setdefault(value, []).append(key)
-#   print(grouped)          # {1: ['a', 'c'], 2: ['b']}
+#       if value not in grouped:
+#           grouped[value] = []
+#       grouped[value].append(key)
+#   print(grouped)                       # {1: ['a', 'c'], 2: ['b']}
+#   After lesson 11 you'll also recognise the one-line version:
+#       inverted = {value: key for key, value in original.items()}
 
 
 print("=" * 70)

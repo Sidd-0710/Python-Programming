@@ -3,8 +3,36 @@
  LESSON 15 — MODULES AND PACKAGES: ORGANISING REAL PROJECTS
 ===============================================================================
 
-Time: about 55 minutes.
+Time: about 55 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-14.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. use the four ways of writing an import                       (PART 1)
+  2. import code from YOUR OWN files                              (PART 2)
+  3. understand where Python looks when you import                (PART 3)
+  4. make a file work both as a tool AND a library                (PART 4)
+  5. install other people's packages safely                       (PART 5)
+  6. lay out a real project in folders                            (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  module        any .py file. text_tools.py is a module called text_tools
+  package       a FOLDER of modules, with an __init__.py file inside
+  import        load a module so you can use what's in it
+  from ... import   take just the names you need:  from math import sqrt
+  alias         a short nickname:  import statistics as stats
+  __init__.py   the file that turns a folder into a package
+  standard library  the ~200 modules that come with Python for free
+  third-party   packages other people publish (on PyPI), installed with pip
+  pip           the tool that downloads and installs packages
+  virtual environment ("venv")   a private folder of packages for ONE project
+  __name__      a variable Python sets: "__main__" if the file was run
+                directly, or the module's name if it was imported
 
 
 -------------------------------------------------------------------------------
@@ -44,15 +72,15 @@ print(LINE)
 
 # FORM 1 - import the whole module. Access things with a dot.
 import math
-print("  import math          ->", math.sqrt(16))
+print("  import math          ->", math.sqrt(16))     # "the sqrt inside math"
 
 # FORM 2 - import specific names directly into your file.
 from math import sqrt, pi
-print("  from math import ... ->", sqrt(25), round(pi, 4))
+print("  from math import ... ->", sqrt(25), round(pi, 4))   # no "math." needed now
 
 # FORM 3 - import with an alias. Standard for long or conventional names.
 import statistics as stats
-print("  import ... as        ->", stats.mean([1, 2, 3, 4]))
+print("  import ... as        ->", stats.mean([1, 2, 3, 4]))  # stats = statistics
 
 # FORM 4 - import everything. AVOID THIS.
 #     from math import *
@@ -73,6 +101,12 @@ print()
 # WHERE IMPORTS GO: all at the TOP of the file, in three groups separated by
 # blank lines - standard library first, then third-party packages, then your
 # own modules. That's the PEP 8 convention and every Python codebase follows it.
+# (This lesson breaks that rule on purpose, so each import sits next to the
+# part that explains it.)
+
+# TRY IT NOW (1 minute):
+#   Add  import random  and print random.randint(1, 10). Then write it the
+#   other way:  from random import randint  and print randint(1, 10).
 
 
 # =============================================================================
@@ -92,6 +126,7 @@ print(LINE)
 # Open those files after this lesson - they're short and commented.
 
 # Import a module from inside the package:
+# In plain English: "from the toolkit folder, load the text_tools and money files"
 from toolkit import text_tools, money
 
 print("  text_tools.slugify:", text_tools.slugify("  Hello World! 2024  "))
@@ -100,6 +135,7 @@ print("  money.add_tax(100):", money.add_tax(100))
 print()
 
 # Import specific functions from a module inside the package:
+# "toolkit.text_tools" means "the text_tools file inside the toolkit folder"
 from toolkit.text_tools import truncate
 from toolkit.money import format_money, split_bill
 
@@ -107,7 +143,7 @@ long_title = "An Extremely Long Blog Post Title That Will Not Fit In The Sidebar
 print("  truncate:", truncate(long_title, 40))
 print("  format_money:", format_money(1234.5))
 
-per_person, grand = split_bill(187.40, 5, tip_rate=0.125)
+per_person, grand = split_bill(187.40, 5, tip_rate=0.125)   # it returns two values
 print(f"  split_bill: {format_money(grand)} total, "
       f"{format_money(per_person)} each")
 print()
@@ -120,13 +156,23 @@ print("  shortcut import:", slugify("Python Is Fun"))
 # Modules carry metadata too:
 import toolkit
 print("  toolkit.__version__:", toolkit.__version__)
-print("  toolkit.__all__    :", toolkit.__all__)
+print("  toolkit.__all__    :", toolkit.__all__)       # the names it offers
 print()
 
 # A NOTE ON THIS COURSE'S FILENAMES: you cannot write `import 01_variables`,
 # because a module name can't start with a digit - it isn't a valid Python
 # identifier. That's why the numbered lesson files are meant to be RUN, while
 # reusable code lives in properly named modules like `toolkit`.
+
+# TRY IT NOW (2 minutes):
+#   Open toolkit/money.py in VS Code and read add_tax. Then print
+#   money.add_tax(50) here, and check the answer matches what you'd expect.
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You can import any module - standard or your own.
+#  After the break: how Python finds modules, and how real projects are set up.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -271,8 +317,11 @@ print()
 #
 # On Windows the activate line is:  .venv\Scripts\activate
 #
+# How to tell it's active: your terminal prompt starts with (.venv).
+#
 # Rule: one virtual environment per project, always. It costs 10 seconds and
-# saves entire afternoons.
+# saves entire afternoons. (The FastAPI course you're heading to next uses
+# exactly this - fastapi_course/.venv.)
 print()
 
 
@@ -348,41 +397,80 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * Any .py file is a module; a folder with __init__.py is a package.
+#   * import math  ->  math.sqrt(9).   from math import sqrt  ->  sqrt(9).
+#     import statistics as stats  ->  stats.mean(...).
+#   * Import your own files the same way:  from toolkit import money
+#   * Python searches the script's own folder first, then sys.path.
+#   * if __name__ == "__main__":  runs only when the file is RUN, not imported.
+#   * Install packages with pip, inside a virtual environment per project.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. After  from math import sqrt,  how do you call it?
+#   Q2. What makes a folder a package?
+#   Q3. You name your file json.py and `import json` breaks. Why?
+#   Q4. What's the point of  if __name__ == "__main__":?
+#   Q5. Why use a virtual environment?
+#
+# ANSWERS
+#   A1. sqrt(16) - no "math." in front.
+#   A2. An __init__.py file inside it.
+#   A3. Python finds YOUR json.py first, instead of the real json module.
+#   A4. Code under it runs only when the file is run directly - not when
+#       another file imports it.
+#   A5. Each project gets its own packages and versions, so projects can't
+#       break each other.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Read the source
+# WARM-UP A (easy) — Import a module
+#   import random  and print a random number between 1 and 10.
+#
+# WARM-UP B (easy) — Import one name
+#   from math import sqrt  and print the square root of 81.
+#
+# WARM-UP C (easy) — Use an alias
+#   import statistics as st  and print the median of [3, 1, 2].
+#
+# EXERCISE 1 (easy) — Read the source
 #   Open toolkit/text_tools.py and toolkit/money.py. Read every line. Then run
 #   each one directly (python3 toolkit/money.py) and observe the __main__ guard
 #   in action.
 #
-# EXERCISE 2 — Add a function
+# EXERCISE 2 (medium) — Add a function
 #   Add `word_count(text)` to toolkit/text_tools.py, returning a dict of word
 #   -> count. Export it from __init__.py, then import and use it here.
 #
-# EXERCISE 3 — Build your own module
+# EXERCISE 3 (medium) — Build your own module
 #   Create validators.py next to this file with: is_valid_email(text),
 #   is_valid_phone(text), is_strong_password(text). Each returns a
 #   (bool, reason) tuple. Give it a __main__ block that self-tests all three.
 #   Import it here and run it over a list of test values.
 #
-# EXERCISE 4 — Make it a package
+# EXERCISE 4 (challenge) — Make it a package
 #   Turn validators.py into a package: a folder `validators/` with
 #   __init__.py, email.py and password.py. Keep the same import interface
 #   working from the caller's point of view.
 #
-# EXERCISE 5 — Explore the standard library
+# EXERCISE 5 (easy) — Explore the standard library
 #   Pick three modules from PART 5's list that you haven't used. Read their
 #   docs (python3 -m pydoc statistics, or docs.python.org), and write one
 #   working example of each.
 #
-# EXERCISE 6 — Set up a virtual environment
+# EXERCISE 6 (medium) — Set up a virtual environment
 #   In a NEW folder outside this course, create a venv, activate it, install
 #   the `requests` package, write a two-line script that imports it, and
 #   produce a requirements.txt. This is the standard start of every real
 #   Python project - do it once by hand and it'll stick.
 #
-# EXERCISE 7 — Cause and fix a circular import
+# EXERCISE 7 (medium) — Cause and fix a circular import
 #   Create a.py that imports b.py, and b.py that imports a.py. Run it and read
 #   the error. Then fix it by moving the shared piece into c.py.
 
@@ -396,12 +484,24 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   import random
+#   print(random.randint(1, 10))
+#
+# WARM-UP B
+#   from math import sqrt
+#   print(sqrt(81))                    # -> 9.0
+#
+# WARM-UP C
+#   import statistics as st
+#   print(st.median([3, 1, 2]))        # -> 2
+#
 # EXERCISE 2
 #   # in toolkit/text_tools.py
 #   def word_count(text):
 #       counts = {}
 #       for word in text.lower().split():
-#           word = word.strip(".,!?;:\"'")
+#           word = word.strip(".,!?;:\"'")   # remove punctuation from the ends
 #           if word:
 #               counts[word] = counts.get(word, 0) + 1
 #       return counts
@@ -414,6 +514,8 @@ print()
 #       if "@" not in text:
 #           return False, "missing @"
 #       local, _, domain = text.partition("@")
+#       # .partition("@") splits at the FIRST @ into three parts: before, the
+#       # "@" itself, and after. `_` is the name for "a part I don't need".
 #       if not local:
 #           return False, "nothing before the @"
 #       if "." not in domain:

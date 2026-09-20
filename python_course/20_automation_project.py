@@ -3,8 +3,41 @@
  LESSON 20 — PROJECT: A REAL AUTOMATION TOOL
 ===============================================================================
 
-Time: about 90 minutes.
+Time: about 90 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-19.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+This lesson is different: it's ONE complete program, built from small
+functions. There's no new Python syntax to learn - only new ways of putting
+what you know together.
+
+HOW TO READ THIS FILE:
+  1. Run it once with no arguments. It builds a practice folder of junk files
+     and runs every feature on it - nothing of yours is touched.
+  2. Read PARTS 1-6. Each is a small function that does ONE job.
+  3. Read PART 7's main(). It's the "manager" that calls the other functions
+     depending on which --flags you gave.
+  4. Try the commands in the TRY IT NOW boxes.
+
+NEW WORDS - come back here whenever you forget one:
+
+  logging       a better print() for tools: every message gets a time and a
+                level, and can go to a file AND the screen
+  log level     how serious a message is: DEBUG, INFO, WARNING, ERROR
+  config        settings kept in one place (often a JSON file) instead of
+                scattered through the code
+  dry run       "show me what you WOULD do, but don't do it". Essential for
+                anything that moves or deletes files
+  hash          a short "fingerprint" of a file's contents. Identical content
+                always gives an identical hash
+  exit code     a number a program hands back when it finishes: 0 = worked,
+                anything else = failed. Other programs check it
+  flag          a command-line option like --dry-run or --report
+  cron          the Mac/Linux tool for running a program on a schedule
 
 
 -------------------------------------------------------------------------------
@@ -57,6 +90,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import shutil
 import sys
 from collections import Counter, defaultdict
@@ -82,6 +116,11 @@ LINE = "-" * 70
 #   * the ability to turn detail up or down without editing code
 #
 # When your 3am job fails, the log is the only evidence you will have.
+#
+# You'll mostly USE a logger, not build one. Using it looks like:
+#     logger.info("moved 3 files")        instead of   print("moved 3 files")
+#     logger.warning("file already exists")
+#     logger.error("cannot read folder")
 
 def setup_logging(log_path, verbose=False):
     """Configure logging to both a file and the console."""
@@ -91,6 +130,7 @@ def setup_logging(log_path, verbose=False):
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()           # so re-running doesn't duplicate output
 
+    # A "handler" is one place log messages go to.
     # The file gets everything, with full timestamps.
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
@@ -100,7 +140,10 @@ def setup_logging(log_path, verbose=False):
 
     # The console gets a tidier view, and only INFO and above unless --verbose.
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter("  %(levelname)-8s %(message)s"))
 
     logger.addHandler(file_handler)
@@ -132,11 +175,12 @@ DEFAULT_CONFIG = {
 
 def load_config(path):
     """Load config from JSON, falling back to the defaults."""
+    config = dict(DEFAULT_CONFIG)              # start with a copy of the defaults
     if path and Path(path).exists():
         with open(path, "r", encoding="utf-8") as f:
             user_config = json.load(f)
-        return {**DEFAULT_CONFIG, **user_config}      # user values win
-    return DEFAULT_CONFIG
+        config.update(user_config)             # the user's settings win (lesson 09)
+    return config
 
 
 def folder_for_extension(extension, config):
@@ -163,7 +207,7 @@ def scan_folder(folder, config):
         if not path.is_file() or path.name in config["ignore_names"]:
             continue
 
-        stat = path.stat()
+        stat = path.stat()                     # size, dates and other details
         files.append({
             "path": path,
             "name": path.name,
@@ -176,12 +220,15 @@ def scan_folder(folder, config):
 
 
 def human_size(num_bytes):
-    """Turn a byte count into something a person can read."""
-    for unit in ("B", "KB", "MB", "GB"):
-        if num_bytes < 1024 or unit == "GB":
-            return f"{num_bytes:,.1f} {unit}" if unit != "B" else f"{num_bytes:,} B"
-        num_bytes /= 1024
-    return f"{num_bytes:,.1f} GB"
+    """Turn a byte count into something a person can read: 2048 -> '2.0 KB'."""
+    if num_bytes < 1024:
+        return f"{num_bytes:,} B"
+    size = num_bytes / 1024
+    for unit in ("KB", "MB"):
+        if size < 1024:
+            return f"{size:,.1f} {unit}"
+        size = size / 1024                     # too big - try the next unit up
+    return f"{size:,.1f} GB"
 
 
 def build_report(files):
@@ -193,18 +240,25 @@ def build_report(files):
     for record in files:
         by_category[record["category"]].append(record)
 
+    categories = {}
+    for name, group in by_category.items():
+        categories[name] = {"count": len(group),
+                            "size": sum(f["size"] for f in group)}
+
     return {
         "count": len(files),
         "total_size": sum(f["size"] for f in files),
         "extensions": Counter(f["extension"] or "(none)" for f in files),
-        "categories": {
-            name: {"count": len(group), "size": sum(f["size"] for f in group)}
-            for name, group in by_category.items()
-        },
+        "categories": categories,
         "oldest": min(files, key=lambda f: f["modified"]),
         "newest": max(files, key=lambda f: f["modified"]),
         "largest": max(files, key=lambda f: f["size"]),
     }
+
+
+def size_of_category(pair):
+    """For sorting (name, stats) pairs by their size."""
+    return pair[1]["size"]
 
 
 def print_report(report, logger):
@@ -219,12 +273,13 @@ def print_report(report, logger):
     logger.info(f"  {'category':<14}{'files':>7}{'size':>14}")
     logger.info("  " + "-" * 35)
     for name, stats in sorted(report["categories"].items(),
-                              key=lambda pair: -pair[1]["size"]):
+                              key=size_of_category, reverse=True):
         logger.info(f"  {name:<14}{stats['count']:>7}{human_size(stats['size']):>14}")
 
     logger.info("")
     logger.info(f"  largest : {report['largest']['name']} "
                 f"({human_size(report['largest']['size'])})")
+    # {date:%Y-%m-%d} formats a date right inside an f-string (lesson 18)
     logger.info(f"  oldest  : {report['oldest']['name']} "
                 f"({report['oldest']['modified']:%Y-%m-%d})")
     logger.info(f"  newest  : {report['newest']['name']} "
@@ -263,9 +318,18 @@ def organise_files(folder, files, config, logger, dry_run=True):
             logger.info(f"moved {record['name']} -> {record['category']}/")
         moved += 1
 
-    verb = "would move" if dry_run else "moved"
-    logger.info(f"{verb} {moved} files, skipped {skipped}")
+    if dry_run:
+        logger.info(f"would move {moved} files, skipped {skipped}")
+    else:
+        logger.info(f"moved {moved} files, skipped {skipped}")
     return moved, skipped
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You've seen the building blocks: logging, config,
+#  scanning, reporting and organising. After the break: duplicates, archiving,
+#  and the main() function that ties it all together.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -285,13 +349,17 @@ def file_hash(path, chunk_size=65536):
     """Return a SHA-256 fingerprint of a file's contents."""
     digest = hashlib.sha256()
     with open(path, "rb") as f:                  # "rb" = read binary
-        while chunk := f.read(chunk_size):       # read in chunks, not all at once
+        while True:                              # read in chunks, not all at once
+            chunk = f.read(chunk_size)
+            if not chunk:                        # an empty chunk = end of the file
+                break
             digest.update(chunk)
     return digest.hexdigest()
 
 
 def find_duplicates(files, logger):
     """Return a dict of hash -> list of files sharing that content."""
+    # Stage 1: group by size.
     by_size = defaultdict(list)
     for record in files:
         by_size[record["size"]].append(record)
@@ -299,12 +367,16 @@ def find_duplicates(files, logger):
     candidates = [group for group in by_size.values() if len(group) > 1]
     logger.debug(f"{sum(len(g) for g in candidates)} files share a size - hashing those")
 
+    # Stage 2: hash only the files that share a size.
     by_hash = defaultdict(list)
     for group in candidates:
         for record in group:
             by_hash[file_hash(record["path"])].append(record)
 
-    duplicates = {h: group for h, group in by_hash.items() if len(group) > 1}
+    duplicates = {}
+    for fingerprint, group in by_hash.items():
+        if len(group) > 1:                       # 2+ files with the same fingerprint
+            duplicates[fingerprint] = group
 
     if duplicates:
         wasted = sum(g[0]["size"] * (len(g) - 1) for g in duplicates.values())
@@ -325,7 +397,7 @@ def find_duplicates(files, logger):
 
 def archive_old_files(folder, files, days, config, logger, dry_run=True):
     """Move files older than `days` into an archive subfolder."""
-    cutoff = datetime.now() - timedelta(days=days)
+    cutoff = datetime.now() - timedelta(days=days)      # "days ago" as a date
     archive_dir = folder / config["archive_folder"]
 
     old_files = [f for f in files if f["modified"] < cutoff]
@@ -359,8 +431,10 @@ def build_parser():
         description="Scan, organise, deduplicate and archive a folder.",
         epilog="Tip: always try --dry-run first.",
     )
+    # nargs="?" = "this argument is optional"
     parser.add_argument("folder", nargs="?", default=None,
                         help="folder to work on (default: a demo sandbox)")
+    # action="store_true" = "a switch: True if the flag is given, else False"
     parser.add_argument("--report", action="store_true",
                         help="show a summary of the folder")
     parser.add_argument("--organise", action="store_true",
@@ -401,7 +475,7 @@ def create_demo_sandbox():
         (SANDBOX / name).write_text(content, encoding="utf-8")
 
     # Backdate two files so --archive-older-than has something to find.
-    import os
+    # os.utime sets a file's "last accessed" and "last modified" times.
     old_time = (datetime.now() - timedelta(days=200)).timestamp()
     for name in ("receipt.pdf", "archive.zip"):
         os.utime(SANDBOX / name, (old_time, old_time))
@@ -417,10 +491,14 @@ def main(argv=None):
     carry on or raise an alarm. Returning 0 from a job that failed is how
     silent breakages happen.
     """
-    args = build_parser().parse_args(argv)
+    args = build_parser().parse_args(argv)     # read the --flags
 
+    # No folder given? Then run the safe demo on a sandbox.
     demo_mode = args.folder is None
-    folder = create_demo_sandbox() if demo_mode else Path(args.folder).expanduser()
+    if demo_mode:
+        folder = create_demo_sandbox()
+    else:
+        folder = Path(args.folder).expanduser()   # expanduser turns ~ into your home folder
 
     logger = setup_logging(WORK_DIR / "filekeeper.log", verbose=args.verbose)
     logger.info("=" * 60)
@@ -440,10 +518,18 @@ def main(argv=None):
         logger.error(f"cannot read folder: {error}")
         return 2
 
-    # In demo mode, run everything so the file is a complete demonstration.
-    do_all = demo_mode and not any([args.report, args.organise,
-                                    args.find_duplicates,
-                                    args.archive_older_than])
+    # In demo mode with no flags, run everything so the file is a complete
+    # demonstration. any([...]) is True if at least one flag was given.
+    any_flag_given = any([args.report, args.organise, args.find_duplicates,
+                          args.archive_older_than])
+    do_all = demo_mode and not any_flag_given
+
+    # The demo always uses a dry run for the risky steps; otherwise the user's
+    # --dry-run choice decides.
+    if do_all:
+        dry_run = True
+    else:
+        dry_run = args.dry_run
 
     if args.report or do_all:
         logger.info("")
@@ -458,15 +544,13 @@ def main(argv=None):
     if args.archive_older_than or do_all:
         logger.info("")
         logger.info("--- ARCHIVE ---")
-        days = args.archive_older_than or 90
-        archive_old_files(folder, files, days, config, logger,
-                          dry_run=True if do_all else args.dry_run)
+        days = args.archive_older_than or 90      # 90 if no number was given
+        archive_old_files(folder, files, days, config, logger, dry_run=dry_run)
 
     if args.organise or do_all:
         logger.info("")
         logger.info("--- ORGANISE ---")
-        organise_files(folder, files, config, logger,
-                       dry_run=True if do_all else args.dry_run)
+        organise_files(folder, files, config, logger, dry_run=dry_run)
 
     logger.info("")
     logger.info(f"done. log written to {(WORK_DIR / 'filekeeper.log')}")
@@ -474,6 +558,16 @@ def main(argv=None):
         logger.info("this was a demo on a sandbox folder; nothing of yours was touched")
         logger.info("try: python3 20_automation_project.py --help")
     return 0                                      # success
+
+
+# TRY IT NOW (5 minutes), in the terminal from the python_course folder:
+#   1. python3 20_automation_project.py --help
+#      Read the help text - argparse wrote all of it from build_parser().
+#   2. python3 20_automation_project.py --report
+#   3. python3 20_automation_project.py --organise --dry-run
+#      Nothing moves. Now run it WITHOUT --dry-run, then look inside
+#      workspace/filekeeper_demo/ - the files are in category folders.
+#   4. Open workspace/filekeeper.log and find the timestamps.
 
 
 # =============================================================================
@@ -497,38 +591,81 @@ def main(argv=None):
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A real tool is many small functions plus one main() that calls them.
+#   * logger.info / .warning / .error beat print(): times, levels, a log file.
+#   * Keep settings in a config dict or JSON file, not scattered in code.
+#   * Anything that moves or deletes files needs a --dry-run.
+#   * A hash fingerprints file contents - equal hashes mean equal files.
+#   * argparse turns --flags into args.flag_name, and writes --help for you.
+#   * main() returns an exit code: 0 for success, non-zero for failure.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. Why does this tool have a --dry-run flag?
+#   Q2. What's the advantage of logging over print()?
+#   Q3. Why check file SIZES before hashing when looking for duplicates?
+#   Q4. What exit code means "it worked"?
+#   Q5. build_report() and print_report() are separate. Why?
+#
+# ANSWERS
+#   A1. So you can see exactly what it would move before it moves anything.
+#   A2. Timestamps, severity levels, and a permanent log file - evidence for
+#       when something goes wrong while nobody was watching.
+#   A3. Files of different sizes can't be identical - so most files never
+#       need to be read at all.
+#   A4. 0.
+#   A5. One calculates, one displays. The same report could then go to an
+#       email or a web page without changing the calculation.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Add --largest N
+# WARM-UP A (easy) — Read the help
+#   Run  python3 20_automation_project.py --help  and match each option to its
+#   add_argument line in build_parser().
+#
+# WARM-UP B (easy) — One feature at a time
+#   Run  python3 20_automation_project.py --find-duplicates  and find the two
+#   duplicate pairs in the output.
+#
+# WARM-UP C (easy) — Change a setting
+#   In DEFAULT_CONFIG, add ".xyz" to the "Data" list. Run --organise --dry-run
+#   and check that mystery.xyz now goes to Data/ instead of Other/.
+#
+# EXERCISE 1 (medium) — Add --largest N
 #   Add a flag that prints the N largest files. Default to 5.
 #
-# EXERCISE 2 — Delete duplicates safely
+# EXERCISE 2 (challenge) — Delete duplicates safely
 #   Add --delete-duplicates that keeps the OLDEST copy of each duplicate set
 #   and removes the rest. It must refuse to run without --dry-run first being
 #   shown, and must log every deletion.
 #
-# EXERCISE 3 — Recursive mode
+# EXERCISE 3 (challenge) — Recursive mode
 #   Add --recursive to make scan_folder walk subfolders (use rglob). Think
 #   carefully about what --organise should then do, and what could go wrong.
 #
-# EXERCISE 4 — Write the report as JSON and CSV
+# EXERCISE 4 (medium) — Write the report as JSON and CSV
 #   Add --output FILE. If it ends .json write JSON, if .csv write CSV.
 #
-# EXERCISE 5 — Date-based folders
+# EXERCISE 5 (medium) — Date-based folders
 #   Add --by-date to organise into YYYY/MM folders from each file's modified
 #   date instead of by type.
 #
-# EXERCISE 6 — A real config file
+# EXERCISE 6 (easy) — A real config file
 #   Write a filekeeper.json with your own categories, and run the tool with
 #   --config filekeeper.json. Confirm your categories override the defaults.
 #
-# EXERCISE 7 — Undo
+# EXERCISE 7 (challenge) — Undo
 #   Have --organise write a JSON manifest of every move it made. Add --undo
 #   that reads the manifest and reverses them. This is a genuinely valuable
 #   feature and a good exercise in careful thinking.
 #
-# EXERCISE 8 — Schedule it
+# EXERCISE 8 (medium) — Schedule it
 #   On Mac/Linux, use `crontab -e` to run your tool every morning:
 #       0 9 * * * /usr/bin/python3 /path/to/20_automation_project.py ~/Downloads --report
 #   Check the log the next day. You have now automated something real.
@@ -538,14 +675,20 @@ def main(argv=None):
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A, B and C
+#   No code to compare - the output is the answer. For C, the ORGANISE section
+#   should now say:  WOULD MOVE mystery.xyz -> Data/
+#
 # EXERCISE 1 — Add --largest N
 #   parser.add_argument("--largest", type=int, nargs="?", const=5,
 #                       metavar="N", help="show the N largest files")
+#   # (const=5 is the value used when the flag is given without a number)
 #   # then in main(), after the scan:
 #   if args.largest:
 #       logger.info("")
 #       logger.info(f"--- {args.largest} LARGEST ---")
-#       for record in sorted(files, key=lambda f: -f["size"])[:args.largest]:
+#       biggest_first = sorted(files, key=lambda f: f["size"], reverse=True)
+#       for record in biggest_first[:args.largest]:
 #           logger.info(f"  {record['name']:<30}{human_size(record['size']):>12}")
 #
 # EXERCISE 2 — Delete duplicates safely
@@ -554,9 +697,10 @@ def main(argv=None):
 #       duplicates = find_duplicates(files, logger)
 #       freed = 0
 #       for group in duplicates.values():
-#           # oldest first, so group[0] is the keeper
+#           # oldest first, so ordered[0] is the keeper
 #           ordered = sorted(group, key=lambda r: r["modified"])
-#           keeper, rest = ordered[0], ordered[1:]
+#           keeper = ordered[0]
+#           rest = ordered[1:]
 #           logger.info(f"  keeping {keeper['name']} "
 #                       f"({keeper['modified']:%Y-%m-%d})")
 #           for record in rest:
@@ -566,14 +710,17 @@ def main(argv=None):
 #               else:
 #                   record["path"].unlink()
 #                   logger.warning(f"    DELETED {record['name']}")
-#       logger.info(f"  {'would free' if dry_run else 'freed'} {human_size(freed)}")
+#       if dry_run:
+#           logger.info(f"  would free {human_size(freed)}")
+#       else:
+#           logger.info(f"  freed {human_size(freed)}")
 #       return freed
 #
 #   # Forcing a dry run first - the safety interlock the exercise asks for:
 #   #   parser.add_argument("--delete-duplicates", action="store_true")
 #   #   parser.add_argument("--i-have-reviewed-the-dry-run", action="store_true")
-#   #   if args.delete_duplicates and not args.dry_run \
-#   #           and not args.i_have_reviewed_the_dry_run:
+#   #   if (args.delete_duplicates and not args.dry_run
+#   #           and not args.i_have_reviewed_the_dry_run):
 #   #       logger.error("refusing to delete: run with --dry-run first, then "
 #   #                    "re-run with --i-have-reviewed-the-dry-run")
 #   #       return 2
@@ -582,7 +729,10 @@ def main(argv=None):
 #
 # EXERCISE 3 — Recursive mode
 #   def scan_folder(folder, config, recursive=False):
-#       paths = folder.rglob("*") if recursive else folder.iterdir()
+#       if recursive:
+#           paths = folder.rglob("*")
+#       else:
+#           paths = folder.iterdir()
 #       files = []
 #       for path in sorted(paths):
 #           if not path.is_file() or path.name in config["ignore_names"]:
@@ -627,14 +777,15 @@ def main(argv=None):
 # EXERCISE 5 — Date-based folders
 #   def organise_by_date(folder, files, logger, dry_run=True):
 #       for record in files:
-#           subfolder = folder / f"{record['modified']:%Y}" / f"{record['modified']:%m}"
+#           year = f"{record['modified']:%Y}"
+#           month = f"{record['modified']:%m}"
+#           subfolder = folder / year / month
 #           destination = subfolder / record["name"]
 #           if destination.exists():
 #               logger.warning(f"skip {record['name']} - already there")
 #               continue
 #           if dry_run:
-#               logger.info(f"WOULD MOVE {record['name']} -> "
-#                           f"{record['modified']:%Y/%m}/")
+#               logger.info(f"WOULD MOVE {record['name']} -> {year}/{month}/")
 #           else:
 #               subfolder.mkdir(parents=True, exist_ok=True)
 #               record["path"].rename(destination)
@@ -651,9 +802,8 @@ def main(argv=None):
 #     "archive_folder": "_old"
 #   }
 #   # then:  python3 20_automation_project.py ~/Downloads --config filekeeper.json --report
-#   # load_config merges yours over DEFAULT_CONFIG, so anything you omit keeps
-#   # its default. That's why {**DEFAULT_CONFIG, **user_config} is the right
-#   # merge order (lesson 09 part 3).
+#   # load_config starts from a copy of DEFAULT_CONFIG and .update()s it with
+#   # yours, so anything you leave out keeps its default.
 #
 # EXERCISE 7 — Undo
 #   def organise_files(folder, files, config, logger, dry_run=True):
@@ -675,7 +825,8 @@ def main(argv=None):
 #       # Reverse order matters: undo the last move first, so that if a later
 #       # move depended on an earlier one you unwind cleanly.
 #       for move in reversed(moves):
-#           source, target = Path(move["to"]), Path(move["from"])
+#           source = Path(move["to"])
+#           target = Path(move["from"])
 #           if not source.exists():
 #               logger.warning(f"cannot undo - {source.name} is gone")
 #               continue

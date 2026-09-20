@@ -3,8 +3,39 @@
  LESSON 07 — LOOPS: DOING THINGS REPEATEDLY
 ===============================================================================
 
-Time: about 80 minutes.
+Time: about 80 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-06.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. repeat code once for each item in a list: the for loop       (PART 1)
+  2. repeat code a set number of times with range()               (PART 2)
+  3. number items, and walk two lists side by side                (PART 3)
+  4. add up, count and collect things as you go                   (PART 4)
+  5. stop a loop early, or skip an item                           (PART 5)
+  6. repeat "while" something is true                             (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  loop          code that runs again and again
+  iteration     one trip round a loop (also called a "pass")
+  loop variable the name that holds the CURRENT item on each pass:
+                in  `for fruit in fruits:`  it's `fruit`
+  range()       makes a run of numbers:  range(1, 4)  gives 1, 2, 3
+  enumerate()   gives you each item AND its position number
+  zip()         walks two lists together, pairing them up
+  accumulator   a variable that builds up a result over the loop - a
+                running total, a count, a list of matches
+  break         "stop the loop right now"
+  continue      "skip the rest of this pass, go to the next item"
+  while loop    "keep repeating WHILE this condition is True"
+  infinite loop a loop that never stops. Press Ctrl+C in the terminal to
+                stop one. Nothing breaks - everyone does it
+  nested loop   a loop inside another loop
 
 
 -------------------------------------------------------------------------------
@@ -64,6 +95,12 @@ for fruit in fruits:
 
 # Read it aloud: "for each fruit in fruits, print...". Python reads like the
 # sentence you'd say, which is why it's a good first language.
+#
+# What actually happens, step by step:
+#   pass 1:  fruit = "apple"   -> print "I have a apple"
+#   pass 2:  fruit = "banana"  -> print "I have a banana"
+#   pass 3:  fruit = "cherry"  -> print "I have a cherry"
+#   no items left -> the loop ends, and Python carries on below it
 print()
 
 # The loop variable is an ordinary variable - use it in any calculation.
@@ -78,6 +115,9 @@ for letter in "Python":
     print(f"  {letter}", end="")        # end="" means "don't start a new line"
 print()                                 # now finish the line
 print()
+
+# TRY IT NOW (1 minute):
+#   Loop over  ["Sidd", "Ana", "Marco"]  and print  Hello, <name>!  for each.
 
 
 # =============================================================================
@@ -97,12 +137,13 @@ print("range(1, 6)     :", list(range(1, 6)))         # [1, 2, 3, 4, 5]
 print("range(0, 20, 5) :", list(range(0, 20, 5)))     # [0, 5, 10, 15]
 print("range(5, 0, -1) :", list(range(5, 0, -1)))     # [5, 4, 3, 2, 1]
 print()
+# (list(...) is only there so print shows all the numbers at once.)
 
 # Note again: the stop value is EXCLUDED. range(1, 6) stops at 5. This matches
 # slicing, and means range(len(x)) gives exactly the valid indexes of x.
 
 for i in range(3):
-    print(f"  attempt {i + 1} of 3")
+    print(f"  attempt {i + 1} of 3")      # i is 0, 1, 2 - so i + 1 is 1, 2, 3
 print()
 
 # `_` is the conventional name for "I don't care about the value, I just want
@@ -113,6 +154,10 @@ print()
 
 # range() doesn't build a list in memory - it generates numbers as needed. So
 # range(10_000_000) costs almost nothing until you loop over it.
+
+# TRY IT NOW (1 minute):
+#   Print the numbers 1 to 10 using a for loop and range().
+#   (Answer: for n in range(1, 11): print(n)  - the stop 11 is excluded)
 
 
 # =============================================================================
@@ -130,6 +175,7 @@ tasks = ["write code", "run tests", "deploy"]
 # It works, but it's noisy and easy to get wrong.
 
 # THE PYTHONIC WAY - enumerate() gives you position AND value together:
+# In plain English: "for each task, with its position counted from 1..."
 for position, task in enumerate(tasks, start=1):
     print(f"  {position}. {task}")
 print()
@@ -138,6 +184,8 @@ print()
 names = ["Sidd", "Ana", "Marco"]
 scores = [88, 95, 72]
 
+# In plain English: "take the 1st name with the 1st score, then the 2nd with
+# the 2nd, and so on"
 for name, score in zip(names, scores):
     print(f"  {name:<8} {score:>3}")
 
@@ -167,36 +215,47 @@ total = 0                               # 1. before
 for amount in sales:
     total += amount                     # 2. inside
 print("total:", total)                  # 3. after
+#   total goes 0 -> 1200 -> 2650 -> 3750 -> 5550 -> 7650 -> 9600
 
 # Pattern B - counting matches
 big_months = 0
 for amount in sales:
     if amount > 1500:
-        big_months += 1
+        big_months += 1                 # count this one
 print("months over 1500:", big_months)
 
 # Pattern C - collecting into a new list (filtering)
 strong = []
 for amount in sales:
     if amount > 1500:
-        strong.append(amount)
+        strong.append(amount)           # keep this one
 print("the strong months:", strong)
 
 # Pattern D - tracking a best/worst so far
-best = sales[0]
+best = sales[0]                         # start with the first as "best so far"
 best_index = 0
 for index, amount in enumerate(sales):
-    if amount > best:
-        best = amount
-        best_index = index
+    if amount > best:                   # found a better one?
+        best = amount                   # remember it
+        best_index = index              # and where it was
 print(f"best: {best} in month {best_index + 1}")
 
 # Pattern E - building a string (join at the end, don't += in the loop)
 pieces = []
 for index, amount in enumerate(sales, start=1):
     pieces.append(f"M{index}={amount}")
-print(" | ".join(pieces))
+print(" | ".join(pieces))               # glue the pieces with " | " (lesson 02)
 print()
+
+# TRY IT NOW (2 minutes):
+#   With  marks = [45, 78, 62, 91, 38],  use a loop to count how many marks
+#   are 50 or more.  (Answer: 3)
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. The for loop and the accumulator patterns are the
+#  heart of this lesson. After the break: stopping early, and while loops.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -218,7 +277,7 @@ for user in users:
     print(f"  checking {user}")
     if user == "sidd":
         print("  found! stopping the search")
-        break
+        break                   # "priya" is never checked
 
 print()
 
@@ -232,9 +291,9 @@ for value in values:
 print("sum of positives only:", total)
 print()
 
-# for...else - an unusual feature worth knowing. The `else` runs ONLY if the
-# loop finished WITHOUT hitting break. It means "we searched everything and
-# never found it".
+# for...else - an unusual feature worth knowing (you can skip it for now).
+# The `else` runs ONLY if the loop finished WITHOUT hitting break. It means
+# "we searched everything and never found it".
 target = "zara"
 for user in users:
     if user == target:
@@ -301,11 +360,17 @@ print()
 attempt = 0
 MAX_ATTEMPTS = 5
 connected = False
+# In plain English: "keep trying while we're not connected AND still have tries left"
 while not connected and attempt < MAX_ATTEMPTS:
     attempt += 1
-    connected = attempt == 3            # pretend the 3rd try works
+    if attempt == 3:                    # pretend the 3rd try works
+        connected = True
     print(f"  connection attempt {attempt}: {'success' if connected else 'failed'}")
 print()
+
+# TRY IT NOW (1 minute):
+#   Write a while loop that prints 10, 8, 6, 4, 2 (start at 10, take 2 off
+#   each time, stop when you reach 0).
 
 
 # =============================================================================
@@ -319,6 +384,8 @@ print(LINE)
 # outer one. Use for grids, tables, and comparing every item against every
 # other item.
 
+# In plain English: "for each row 1 to 3, go through columns 1 to 3 and print
+# row x column - then start a new line"
 for row in range(1, 4):
     for col in range(1, 4):
         print(f"{row}x{col}={row * col:<3}", end="")
@@ -376,8 +443,9 @@ info_count = 0
 error_messages = []
 
 for line in log_lines:
-    # Split into date, time, level, message - maxsplit=3 keeps the message whole
-    date, time, level, message = line.split(None, 3)
+    # Split on spaces, at most 3 times: date, time, level, and the whole message.
+    # (maxsplit=3 keeps the message in one piece - lesson 02 PART 6.)
+    date, time, level, message = line.split(maxsplit=3)
 
     if level == "ERROR":
         error_count += 1
@@ -392,12 +460,14 @@ print(f"  INFO : {info_count}")
 print(f"  WARN : {warn_count}")
 print(f"  ERROR: {error_count}")
 
-if error_messages:
+if error_messages:                          # "if the list isn't empty"
     print("\nErrors found:")
     for position, message in enumerate(error_messages, start=1):
         print(f"  {position}. {message}")
 
     # Was the same error repeated? A duplicate-detection loop.
+    # In plain English: "keep a list of messages we've seen; if a message is
+    # already in it, it's a repeat".
     seen = []
     repeats = []
     for message in error_messages:
@@ -407,7 +477,7 @@ if error_messages:
         else:
             seen.append(text)
     if repeats:
-        print(f"\nRepeated errors (likely one root cause): {set(repeats)}")
+        print(f"\nRepeated errors (likely one root cause): {repeats}")
 print()
 
 
@@ -440,7 +510,7 @@ print("odds left:", numbers)
 demo = ["a", "b", "c"]
 #   for i in range(len(demo)):  print(demo[i])      <- clumsy
 for item in demo:                                   # <- say what you mean
-    pass
+    pass                        # `pass` means "do nothing" - a placeholder
 #   Use range(len(...)) only when you genuinely need the index AND can't use
 #   enumerate.
 
@@ -460,39 +530,81 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * for item in collection:  runs the indented block once per item.
+#   * range(1, 6) gives 1, 2, 3, 4, 5 - the stop number is excluded.
+#   * enumerate() gives position + item; zip() pairs up two lists.
+#   * Accumulators: set up BEFORE the loop, update INSIDE, use AFTER.
+#   * break stops the loop; continue skips to the next item.
+#   * while condition:  repeats until the condition is False. Make sure
+#     something inside changes it - or you'll need Ctrl+C.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. How many times does  for i in range(4):  run? What values does i take?
+#   Q2. Where must  total = 0  go when adding up a list - inside or before
+#       the loop?
+#   Q3. What's the difference between break and continue?
+#   Q4. What goes wrong here?   n = 3 / while n > 0: print(n)
+#   Q5. How do you print "1. apple", "2. pear" from ["apple", "pear"]?
+#
+# ANSWERS
+#   A1. 4 times. i is 0, 1, 2, 3.
+#   A2. Before. Inside, it would reset to 0 on every pass.
+#   A3. break leaves the loop completely; continue just skips to the next item.
+#   A4. n never changes, so it loops forever. Add  n -= 1  inside.
+#   A5. for number, fruit in enumerate(["apple", "pear"], start=1):
+#           print(f"{number}. {fruit}")
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Times table
+# WARM-UP A (easy) — Count to five
+#   Use a for loop with range() to print the numbers 1 to 5.
+#
+# WARM-UP B (easy) — Loud colours
+#   Loop over ["red", "green", "blue"] and print each colour in CAPITALS.
+#
+# WARM-UP C (easy) — Add them up
+#   Use an accumulator loop to add up [5, 10, 15] and print the total (30).
+#   Don't use sum() - that's the point.
+#
+# EXERCISE 1 (easy) — Times table
 #   Print the 7 times table from 7x1 to 7x12, one per line, neatly aligned.
 #
-# EXERCISE 2 — Sum and average without sum()
+# EXERCISE 2 (medium) — Sum and average without sum()
 #   Given [23, 45, 12, 67, 34, 89, 21], use a loop to find the total, the
 #   average, the largest and the smallest - without using sum(), max() or
 #   min(). This teaches you what those functions actually do.
+#   Hint: Pattern A for the total, Pattern D for largest and smallest.
 #
-# EXERCISE 3 — Countdown with a twist
+# EXERCISE 3 (medium) — Countdown with a twist
 #   Count down from 20 to 1, but print "Fizz" instead of any number divisible
 #   by 3. Use a while loop.
 #
-# EXERCISE 4 — Password retry simulator
+# EXERCISE 4 (medium) — Password retry simulator
 #   The correct password is "python123". Given a list of attempts
 #   ["letmein", "password", "python123", "other"], loop until it's correct or
 #   3 attempts are used up. Print whether access was granted, and stop
 #   immediately on success (don't check "other").
 #
-# EXERCISE 5 — Invoice report
+# EXERCISE 5 (medium) — Invoice report
 #   Given this data, print a table with a line per order, then totals:
-#       orders = [("Ana", 3, 19.99), ("Marco", 1, 249.00), ("Sidd", 7, 4.50)]
+#       orders = [["Ana", 3, 19.99], ["Marco", 1, 249.00], ["Sidd", 7, 4.50]]
 #   Columns: customer, qty, unit price, line total. Then print the grand total
 #   and the average order value.
+#   Hint: it's the same shape as the table loop in PART 7.
 #
-# EXERCISE 6 — Find the duplicates
+# EXERCISE 6 (challenge) — Find the duplicates
 #   Given ["a", "b", "c", "b", "d", "a", "a"], print each value that appears
 #   more than once, along with how many times.
 #
-# EXERCISE 7 — A pyramid
-#   Print this shape using nested loops:
+# EXERCISE 7 (medium) — A pyramid
+#   Print this shape using a loop:
 #       *
 #       **
 #       ***
@@ -500,7 +612,7 @@ print()
 #       *****
 #   Then make it right-aligned (a proper triangle) using string padding.
 #
-# EXERCISE 8 — Word frequency (a real data task)
+# EXERCISE 8 (challenge) — Word frequency (a real data task)
 #   Given a sentence, count how many times each word appears and print the
 #   results. You only have lists so far, so it'll be clumsy - that clumsiness
 #   is exactly why dictionaries exist (lesson 09). Do it anyway; you'll
@@ -515,6 +627,20 @@ print()
 # =============================================================================
 # SOLUTIONS
 # =============================================================================
+#
+# WARM-UP A
+#   for n in range(1, 6):
+#       print(n)
+#
+# WARM-UP B
+#   for colour in ["red", "green", "blue"]:
+#       print(colour.upper())
+#
+# WARM-UP C
+#   total = 0
+#   for number in [5, 10, 15]:
+#       total += number
+#   print(total)                       # -> 30
 #
 # EXERCISE 1
 #   for n in range(1, 13):
@@ -536,23 +662,31 @@ print()
 # EXERCISE 3
 #   n = 20
 #   while n >= 1:
-#       print("Fizz" if n % 3 == 0 else n)
+#       if n % 3 == 0:
+#           print("Fizz")
+#       else:
+#           print(n)
 #       n -= 1
 #
 # EXERCISE 4
 #   CORRECT = "python123"
 #   attempts = ["letmein", "password", "python123", "other"]
 #   granted = False
-#   for tries, attempt in enumerate(attempts, start=1):
+#   tries = 0
+#   for attempt in attempts:
+#       tries += 1
 #       if attempt == CORRECT:
 #           granted = True
-#           break
+#           break                  # success: stop checking
 #       if tries == 3:
-#           break
-#   print("Access granted" if granted else "Locked out")
+#           break                  # out of tries
+#   if granted:
+#       print("Access granted")
+#   else:
+#       print("Locked out")
 #
 # EXERCISE 5
-#   orders = [("Ana", 3, 19.99), ("Marco", 1, 249.00), ("Sidd", 7, 4.50)]
+#   orders = [["Ana", 3, 19.99], ["Marco", 1, 249.00], ["Sidd", 7, 4.50]]
 #   print(f"{'Customer':<10}{'Qty':>5}{'Unit':>10}{'Total':>10}")
 #   grand = 0
 #   for customer, qty, unit in orders:
@@ -567,7 +701,7 @@ print()
 #   checked = []
 #   for item in data:
 #       if item in checked:
-#           continue
+#           continue               # already reported this one
 #       checked.append(item)
 #       count = data.count(item)
 #       if count > 1:
@@ -578,7 +712,7 @@ print()
 #       print("*" * row)
 #   print()
 #   for row in range(1, 6):
-#       print(f"{'*' * row:>5}")
+#       print(f"{'*' * row:>5}")  # right-align in a space 5 wide (lesson 02)
 #
 # EXERCISE 8
 #   sentence = "the cat sat on the mat the end"

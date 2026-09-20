@@ -3,8 +3,40 @@
  LESSON 10 — FUNCTIONS: NAMING AND REUSING BEHAVIOUR
 ===============================================================================
 
-Time: about 85 minutes.
+Time: about 85 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-09.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. write your own functions with def, and call them             (PART 1)
+  2. give them inputs, with defaults and names                    (PART 2)
+  3. understand where variables "live"                            (PART 3)
+  4. write functions that are easy to read and reuse              (PART 4)
+  5. pass a function into another function, and use lambda        (PART 5)
+  6. turn a long script into a few clear functions                (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  function      a named, reusable block of code
+  def           the word that DEFINES (creates) a function
+  call          RUN a function by writing its name with brackets:  greet()
+  parameter     the input NAME in the definition:   def greet(name):
+  argument      the actual VALUE you pass in:       greet("Sidd")
+  return        hand a value BACK to whoever called the function - and stop
+  None          what a function gives back if it has no return
+  default       a parameter value used when the caller doesn't give one
+  keyword argument   an argument passed by name:  greet(name="Sidd")
+  scope         where a variable exists. Variables made inside a function
+                only exist inside it
+  docstring     the text in triple quotes right under a def, explaining it
+  lambda        a tiny one-line function with no name (PART 5)
+
+You've been CALLING functions since lesson 00 - print(), len(), int().
+Today you write your own.
 
 
 -------------------------------------------------------------------------------
@@ -16,9 +48,6 @@ bottom. Functions are what turn scripts into software.
 
 A function is a named, reusable chunk of behaviour. You define it once, then
 call it by name as many times as you like, with different inputs.
-
-You have been USING functions since lesson 00: print(), len(), sum(), int().
-Now you'll write your own.
 
 THINK OF A FUNCTION AS A MACHINE:
 
@@ -83,8 +112,8 @@ def greet_person(name):
     """Greet someone by name."""
     print(f"  Hello, {name}!")
 
-greet_person("Sidd")
-greet_person("Ana")
+greet_person("Sidd")        # inside the function, name is "Sidd" this time
+greet_person("Ana")         # ...and "Ana" this time
 print()
 
 # VOCABULARY (people use these loosely, but the distinction is useful):
@@ -104,6 +133,7 @@ result = add(3, 4)              # the function's value is captured
 print(f"  add(3, 4) returned {result}")
 print(f"  and it can be used in expressions: {add(3, 4) * 10}")
 print(f"  or nested: {add(add(1, 2), add(3, 4))}")
+#   Nested calls run inside-out: add(1, 2) is 3, add(3, 4) is 7, then add(3, 7).
 print()
 
 
@@ -134,6 +164,10 @@ print()
 
 # A function with no return statement returns None automatically.
 
+# TRY IT NOW (2 minutes):
+#   Write  def double(n):  that RETURNS n * 2.  Then print double(21).
+#   (Answer: 42. If you got None, you used print instead of return.)
+
 
 # =============================================================================
 # PART 2 — ARGUMENTS IN DEPTH
@@ -160,10 +194,13 @@ print()
 # DEFAULT VALUES make a parameter optional:
 def make_tag(text, tag="p", css_class=None):
     """Build an HTML tag. Only `text` is required."""
-    class_part = f' class="{css_class}"' if css_class else ""
+    if css_class:
+        class_part = f' class="{css_class}"'
+    else:
+        class_part = ""
     return f"<{tag}{class_part}>{text}</{tag}>"
 
-print(" ", make_tag("Hello"))
+print(" ", make_tag("Hello"))                   # tag defaults to "p"
 print(" ", make_tag("Title", "h1"))
 print(" ", make_tag("Warning", "div", "alert"))
 print(" ", make_tag("Styled", css_class="highlight"))    # skip the middle one
@@ -194,6 +231,10 @@ print("  fixed_add_item('b') :", fixed_add_item("b"), "<- correct")
 # or set().
 print()
 
+# --- OPTIONAL: *args and **kwargs ---
+# You'll see these in other people's code, so recognise them - but you won't
+# need to write them for a while. Skim this and move on.
+
 # *args - "accept any number of positional arguments", collected into a tuple:
 def total(*numbers):
     """Sum however many numbers you pass."""
@@ -215,6 +256,10 @@ print()
 # You've seen these in action already - print() itself is defined roughly as
 # `def print(*values, sep=" ", end="\n")`, which is exactly why it accepts any
 # number of items plus those optional keyword settings.
+
+# TRY IT NOW (2 minutes):
+#   Write  def greet_with(name, greeting="Hello"):  returning  "Hello, Sidd".
+#   Call it as greet_with("Sidd") and as greet_with("Sidd", greeting="Hi").
 
 
 # =============================================================================
@@ -285,6 +330,12 @@ print("  the caller's list was modified:", my_list)
 print()
 
 
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You can now write, call and reason about your own
+#  functions. After the break: how to write GOOD ones, and a real refactor.
+# -----------------------------------------------------------------------------
+
+
 # =============================================================================
 # PART 4 — DOCSTRINGS AND GOOD FUNCTION DESIGN
 # =============================================================================
@@ -303,8 +354,12 @@ def calculate_shipping(weight_kg, country="UK", express=False):
     Returns:
         The cost as a float, rounded to 2 decimal places.
     """
-    base = 3.99 if country == "UK" else 12.99
-    per_kg = 0.75 if country == "UK" else 2.50
+    if country == "UK":
+        base = 3.99
+        per_kg = 0.75
+    else:
+        base = 12.99
+        per_kg = 2.50
     cost = base + weight_kg * per_kg
     if express:
         cost *= 1.8
@@ -361,15 +416,19 @@ for name, operation in operations.items():
 print()
 
 # And you can PASS them to other functions. That's what `key=` has been doing
-# all along in sorted():
+# all along in sorted() (lessons 06 and 09):
 words = ["banana", "Apple", "cherry"]
 print("  sorted(key=str.lower):", sorted(words, key=str.lower))
-print("  sorted(key=len)      :", sorted(words, key=len))
+print("  sorted(key=len)      :", sorted(words, key=len))   # shortest word first
 print()
 
 # lambda: a small, unnamed function written inline.
 #     lambda arguments: expression
 # It can only be ONE expression, and it returns it automatically.
+#
+# These two do EXACTLY the same thing:
+#     def double(x):                 double = lambda x: x * 2
+#         return x * 2
 
 double = lambda x: x * 2                # legal but pointless - just use def
 print("  double(5):", double(5))
@@ -378,6 +437,9 @@ print("  double(5):", double(5))
 people = [("Sidd", 22), ("Ana", 30), ("Marco", 25)]
 print("  by age  :", sorted(people, key=lambda person: person[1]))
 print("  by name :", sorted(people, key=lambda person: person[0]))
+# Read  lambda person: person[1]  as "given a person, use item 1 (their age)".
+# In lessons 06 and 09 you wrote tiny named functions for this, like
+# value_of(pair). A lambda is the same thing, written inline.
 
 orders = [
     {"item": "widget", "price": 9.99},
@@ -387,7 +449,12 @@ print("  cheapest:", min(orders, key=lambda order: order["price"]))
 
 # RULE: use lambda ONLY for tiny throwaway expressions passed to another
 # function. If it needs a name or more than one line, write a proper def.
+# And while you're learning, a named def is ALWAYS fine instead.
 print()
+
+# TRY IT NOW (1 minute):
+#   Sort  ["kiwi", "fig", "banana"]  by length using key=len, then print it.
+#   (Answer: ['fig', 'kiwi', 'banana'])
 
 
 # =============================================================================
@@ -412,14 +479,18 @@ SALES = [
 
 def only_paid(sales):
     """Return just the sales with a 'paid' status."""
-    return [sale for sale in sales if sale["status"] == "paid"]
+    paid = []
+    for sale in sales:
+        if sale["status"] == "paid":
+            paid.append(sale)
+    return paid
 
 
 def total_by(sales, field):
     """Sum the amounts, grouped by any field name. Returns a dict."""
     totals = {}
     for sale in sales:
-        key = sale[field]
+        key = sale[field]                       # e.g. sale["region"]
         totals[key] = totals.get(key, 0) + sale["amount"]
     return totals
 
@@ -430,7 +501,7 @@ def format_money(amount):
 
 
 def print_table(title, totals):
-    """Display a dict of name -> amount as a sorted table."""
+    """Display a dict of name -> amount as a sorted table, biggest first."""
     print(f"\n  {title}")
     print(f"  {'-' * 24}")
     for name, amount in sorted(totals.items(), key=lambda pair: pair[1], reverse=True):
@@ -439,7 +510,7 @@ def print_table(title, totals):
     print(f"  {'TOTAL':<10}{format_money(sum(totals.values()))}")
 
 
-# The main flow - six lines that describe the whole program.
+# The main flow - four lines that describe the whole program.
 paid = only_paid(SALES)
 print(f"  {len(paid)} paid of {len(SALES)} total sales")
 print_table("Revenue by region", total_by(paid, "region"))
@@ -496,46 +567,90 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * def name(parameters):  creates a function. It doesn't run until CALLED:
+#     name(arguments)
+#   * return hands a value back AND stops the function. No return -> None.
+#   * print shows; return gives back. If you want to USE the answer, return it.
+#   * Defaults make parameters optional: def greet(name, greeting="Hello")
+#   * Never use [] or {} as a default. Use None, then create inside.
+#   * Variables made inside a function stay inside it (scope).
+#   * Functions are values: pass them to sorted(key=...). lambda is a tiny
+#     inline function.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What's the difference between defining a function and calling it?
+#   Q2. def f(x): print(x * 2).  What does  y = f(5)  put in y?
+#   Q3. def greet(name, greeting="Hi"): ...  Which argument is required?
+#   Q4. What does  return  do besides giving back a value?
+#   Q5. Rewrite  lambda n: n + 1  as a normal def.
+#
+# ANSWERS
+#   A1. Defining (def) teaches Python the recipe. Calling (name()) runs it.
+#   A2. None. f PRINTS 10 but returns nothing.
+#   A3. name. greeting has a default.
+#   A4. It ends the function immediately.
+#   A5. def add_one(n):
+#           return n + 1
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Basics
+# WARM-UP A (easy) — Say hi
+#   Write  def say_hi():  that prints "Hi!". Call it twice.
+#
+# WARM-UP B (easy) — Square
+#   Write  def square(n):  that RETURNS n * n. Print square(4).
+#
+# WARM-UP C (easy) — A default
+#   Write  def welcome(name="friend"):  that returns "Welcome, <name>!".
+#   Print it with no argument, then with your name.
+#
+# EXERCISE 1 (easy) — Basics
 #   Write celsius_to_fahrenheit(celsius) that RETURNS the converted value.
 #   Call it in a loop for -10, 0, 21.5, 37 and print a neat two-column table.
 #
-# EXERCISE 2 — Defaults
+# EXERCISE 2 (easy) — Defaults
 #   Write greet(name, greeting="Hello", punctuation="!") returning a greeting
 #   string. Call it four ways: name only, custom greeting, custom punctuation
 #   via keyword, and everything specified.
 #
-# EXERCISE 3 — Validation function
+# EXERCISE 3 (medium) — Validation function
 #   Write is_valid_password(password) returning a (bool, reason) tuple.
 #   Rules: at least 8 characters, at least one digit, at least one letter, and
 #   not in a small list of banned passwords. Test it with 5 different inputs.
+#   Hint: to find out if there's a digit, loop over the characters and set a
+#   has_digit variable to True when char.isdigit().
 #
-# EXERCISE 4 — Statistics toolkit
+# EXERCISE 4 (challenge) — Statistics toolkit
 #   Write three functions: mean(numbers), median(numbers), mode(numbers).
 #   Each returns a value. Handle the empty-list case sensibly (return None).
 #   Then write describe(numbers) that uses all three and returns a dict.
 #
-# EXERCISE 5 — Refactor an old lesson
+# EXERCISE 5 (medium) — Refactor an old lesson
 #   Take your log-analyser code from lesson 07 PART 8 and split it into:
 #     parse_line(line) -> dict
 #     count_levels(lines) -> dict
 #     find_errors(lines) -> list
 #   Then write a main flow of 4-5 lines that calls them.
 #
-# EXERCISE 6 — Word tools with *args
-#   Write longest_word(*words) that returns the longest of however many words
-#   are passed. Then write it again taking a single list, and consider which
-#   interface you prefer and why.
+# EXERCISE 6 (medium) — Longest word
+#   Write longest_word(words) that takes a list and returns its longest word
+#   (or None for an empty list).
+#   OPTIONAL: also write a *args version, longest_word_args(*words), and
+#   compare how you'd call each.
 #
-# EXERCISE 7 — A function that takes a function
+# EXERCISE 7 (medium) — A function that takes a function
 #   Write apply_to_all(items, operation) that returns a new list with
-#   `operation` applied to every item. Call it with a lambda that doubles
+#   `operation` applied to every item. Call it with a function that doubles
 #   numbers, then with str.upper on a list of words.
 #
-# EXERCISE 8 — Find the bug
+# EXERCISE 8 (easy) — Find the bug
 #   Explain why this always returns the same list, then fix it:
 #       def collect(item, results=[]):
 #           results.append(item)
@@ -550,6 +665,23 @@ print()
 # =============================================================================
 # SOLUTIONS
 # =============================================================================
+#
+# WARM-UP A
+#   def say_hi():
+#       print("Hi!")
+#   say_hi()
+#   say_hi()
+#
+# WARM-UP B
+#   def square(n):
+#       return n * n
+#   print(square(4))                   # -> 16
+#
+# WARM-UP C
+#   def welcome(name="friend"):
+#       return f"Welcome, {name}!"
+#   print(welcome())                   # -> Welcome, friend!
+#   print(welcome("Sidd"))             # -> Welcome, Sidd!
 #
 # EXERCISE 1
 #   def celsius_to_fahrenheit(celsius):
@@ -567,38 +699,53 @@ print()
 #   print(greet("Sidd", "Good morning", "."))
 #
 # EXERCISE 3
-#   BANNED = {"password", "12345678", "letmein1"}
+#   BANNED = ["password", "12345678", "letmein1"]
 #   def is_valid_password(password):
 #       if len(password) < 8:
 #           return False, "too short"
 #       if password in BANNED:
 #           return False, "too common"
-#       if not any(c.isdigit() for c in password):
+#       has_digit = False
+#       has_letter = False
+#       for char in password:
+#           if char.isdigit():
+#               has_digit = True
+#           if char.isalpha():
+#               has_letter = True
+#       if not has_digit:
 #           return False, "needs a digit"
-#       if not any(c.isalpha() for c in password):
+#       if not has_letter:
 #           return False, "needs a letter"
 #       return True, "ok"
 #   for pw in ["short", "password", "12345678", "hunter2024", "abcdefgh"]:
 #       print(pw, is_valid_password(pw))
+#   (After lesson 11 you'll write the digit check in one line:
+#    any(char.isdigit() for char in password))
 #
 # EXERCISE 4
 #   def mean(numbers):
-#       return sum(numbers) / len(numbers) if numbers else None
+#       if not numbers:
+#           return None
+#       return sum(numbers) / len(numbers)
 #   def median(numbers):
 #       if not numbers:
 #           return None
 #       ordered = sorted(numbers)
 #       mid = len(ordered) // 2
-#       if len(ordered) % 2 == 1:
+#       if len(ordered) % 2 == 1:          # odd length: the middle one
 #           return ordered[mid]
-#       return (ordered[mid - 1] + ordered[mid]) / 2
+#       return (ordered[mid - 1] + ordered[mid]) / 2   # even: average the two
 #   def mode(numbers):
 #       if not numbers:
 #           return None
 #       counts = {}
 #       for n in numbers:
 #           counts[n] = counts.get(n, 0) + 1
-#       return max(counts, key=counts.get)
+#       most_common = numbers[0]
+#       for n, count in counts.items():
+#           if count > counts[most_common]:
+#               most_common = n
+#       return most_common
 #   def describe(numbers):
 #       return {"mean": mean(numbers), "median": median(numbers),
 #               "mode": mode(numbers), "count": len(numbers)}
@@ -606,7 +753,7 @@ print()
 #
 # EXERCISE 5
 #   def parse_line(line):
-#       date, time, level, message = line.split(None, 3)
+#       date, time, level, message = line.split(maxsplit=3)
 #       return {"date": date, "time": time, "level": level, "message": message}
 #   def count_levels(lines):
 #       counts = {}
@@ -615,22 +762,38 @@ print()
 #           counts[level] = counts.get(level, 0) + 1
 #       return counts
 #   def find_errors(lines):
-#       return [parse_line(l) for l in lines if parse_line(l)["level"] == "ERROR"]
+#       errors = []
+#       for line in lines:
+#           parsed = parse_line(line)
+#           if parsed["level"] == "ERROR":
+#               errors.append(parsed)
+#       return errors
 #
 # EXERCISE 6
-#   def longest_word(*words):
-#       return max(words, key=len) if words else None
-#   print(longest_word("a", "abc", "ab"))
-#   def longest_in_list(words):
-#       return max(words, key=len) if words else None
+#   def longest_word(words):
+#       if not words:
+#           return None
+#       return max(words, key=len)         # biggest by length
+#   print(longest_word(["a", "abc", "ab"]))            # -> abc
+#   def longest_word_args(*words):
+#       if not words:
+#           return None
+#       return max(words, key=len)
+#   print(longest_word_args("a", "abc", "ab"))
 #   # The list version is usually better: you normally HAVE a list already,
-#   # and *args forces callers to write longest_word(*my_list).
+#   # and *args forces callers to write longest_word_args(*my_list).
 #
 # EXERCISE 7
 #   def apply_to_all(items, operation):
-#       return [operation(item) for item in items]
-#   print(apply_to_all([1, 2, 3], lambda n: n * 2))
-#   print(apply_to_all(["a", "b"], str.upper))
+#       results = []
+#       for item in items:
+#           results.append(operation(item))
+#       return results
+#   def double(n):
+#       return n * 2
+#   print(apply_to_all([1, 2, 3], double))            # -> [2, 4, 6]
+#   print(apply_to_all(["a", "b"], str.upper))        # -> ['A', 'B']
+#   (With a lambda:  apply_to_all([1, 2, 3], lambda n: n * 2))
 #
 # EXERCISE 8
 #   The default list is created once at definition time and shared by every

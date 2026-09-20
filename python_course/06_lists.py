@@ -3,8 +3,37 @@
  LESSON 06 — LISTS: STORING MANY THINGS
 ===============================================================================
 
-Time: about 75 minutes.
+Time: about 75 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-05.
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. keep many values under ONE name: a list                      (PART 1)
+  2. read items by position, or take a chunk                      (PART 2)
+  3. add, change and remove items                                 (PART 3)
+  4. search, count and sort a list                                (PARTS 4-5)
+  5. get totals, averages, biggest and smallest instantly          (PART 6)
+  6. avoid the "copy trap" that surprises everyone                 (PART 7)
+
+NEW WORDS - come back here whenever you forget one:
+
+  list          several values in order, inside square brackets:
+                [1200, 1450, 1100]     ["Sidd", "Ana"]
+  item          one value inside a list (also called an "element")
+  index         an item's position. The first item is at index 0
+  mutable       "can be changed". Lists are mutable - strings are not
+  append        add one item to the END of a list
+  sort          put in order: smallest to largest, or A to Z
+  in place      changes the ORIGINAL list, instead of making a new one
+  nested list   a list inside a list - the way to store a table:
+                [["Widget", 12], ["Gadget", 5]]
+  for loop      "for each item in the list, do this". Lesson 07 teaches loops
+                properly; a few appear here early, always with a plain-English
+                note beside them
 
 
 -------------------------------------------------------------------------------
@@ -70,6 +99,7 @@ print("mixed:", mixed)
 
 # A list of lists - this is how you represent a TABLE (rows of columns).
 # Remember this shape; it's the foundation of the data-analysis lesson.
+#   Each inner list is one ROW:  [name, quantity, price]
 table = [
     ["Widget", 12, 4.99],
     ["Gadget", 5, 12.50],
@@ -78,10 +108,14 @@ table = [
 print("table:", table)
 
 # list() converts other sequences into a list.
-print("list('abc'):", list("abc"))              # ['a', 'b', 'c']
-print("list(range(5)):", list(range(5)))        # [0, 1, 2, 3, 4]
-print("from split():", "a,b,c".split(","))      # ['a', 'b', 'c']
+print("list('abc'):", list("abc"))              # ['a', 'b', 'c'] - one item per letter
+print("list(range(5)):", list(range(5)))        # [0, 1, 2, 3, 4]  - the numbers 0 to 4
+print("from split():", "a,b,c".split(","))      # ['a', 'b', 'c'] - lesson 02
 print()
+
+# TRY IT NOW (1 minute):
+#   Make a list called  friends  with three names in it. Print the list, and
+#   print how many names it holds with len().
 
 
 # =============================================================================
@@ -113,10 +147,15 @@ print("sales[::-1]     :", sales[::-1])     # reversed copy
 print()
 
 # Indexing into a list of lists: first index picks the row, second the column.
+#   table[1][0] reads as "row 1, then item 0 of that row"
 print("table[1]        :", table[1])        # the whole Gadget row
 print("table[1][0]     :", table[1][0])     # 'Gadget' - row 1, column 0
 print("table[1][2]     :", table[1][2])     # 12.50 - the price
 print()
+
+# TRY IT NOW (1 minute):
+#   Predict, then check:  sales[1]   sales[-1]   table[2][0]
+#   (Answers: 1450, 1950, 'Doohickey')
 
 
 # =============================================================================
@@ -130,7 +169,7 @@ items = ["apple", "banana", "cherry"]
 print("start        :", items)
 
 # Replace by index.
-items[1] = "blueberry"
+items[1] = "blueberry"          # in plain English: "the item at position 1 becomes blueberry"
 print("after [1]=   :", items)
 
 # append() - add ONE item to the end. The workhorse.
@@ -138,7 +177,7 @@ items.append("date")
 print("after append :", items)
 
 # insert(position, item) - add at a specific spot, shifting everything right.
-items.insert(0, "avocado")
+items.insert(0, "avocado")      # position 0 = the very front
 print("after insert :", items)
 
 # extend() - add ALL items from another list.
@@ -160,8 +199,8 @@ items.remove("blueberry")
 print("after remove :", items)
 
 # pop(index) - remove AND return an item. No index = the last one.
-last = items.pop()
-first = items.pop(0)
+last = items.pop()              # take the last item out, and keep it in `last`
+first = items.pop(0)            # take the item at position 0 out
 print(f"popped '{last}' and '{first}' :", items)
 
 # del - delete by index or slice.
@@ -173,6 +212,14 @@ scratch = [1, 2, 3]
 scratch.clear()
 print("after clear  :", scratch)
 print()
+
+# Unlike string methods (lesson 02), these list methods change the list
+# ITSELF. You don't write  items = items.append("x")  - just  items.append("x").
+
+# TRY IT NOW (2 minutes):
+#   Start with  colours = ["red", "green"].  Add "blue" to the end, put
+#   "black" at the front, then remove "green". Print it after each step.
+#   (Final answer: ['black', 'red', 'blue'])
 
 
 # =============================================================================
@@ -196,6 +243,12 @@ if "mango" in stock:
 else:
     print("'mango' isn't in the list - checked before calling .index()")
 print()
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You can now create, read, change and search lists.
+#  After the break: sorting, instant statistics, and the copy trap.
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -227,28 +280,42 @@ print("original after .sort() :", numbers)      # changed in place
 broken = [3, 1, 2].sort()
 print("value of [3,1,2].sort():", broken, "<- None, not a list!")
 
-# Descending order:
+# Descending order (biggest first):
 print("sorted desc  :", sorted([42, 7, 19], reverse=True))
 
 # Sorting strings is alphabetical, with a case gotcha:
 words = ["banana", "Apple", "cherry"]
 print("sorted words :", sorted(words))                    # capitals first
 print("case-insensitive:", sorted(words, key=str.lower))  # usually what you want
+#   key=str.lower means "compare each word by its lowercase version".
+#   Notice: str.lower with NO brackets - you're handing over the tool, not
+#   using it yourself.
 
 # `key` takes a function that produces the value to sort BY. This is how you
-# sort a table by a chosen column - sort rows by price (index 2):
-by_price = sorted(table, key=lambda row: row[2])
+# sort a table by a chosen column. Here's a tiny function that picks the price
+# out of a row (def is lesson 10 - read it as "price_of_row takes a row and
+# gives back item 2 of it"):
+def price_of_row(row):
+    return row[2]
+
+by_price = sorted(table, key=price_of_row)     # sort the rows by their price
 print("table by price:")
+# In plain English: "for each row in by_price, print it" (loops: lesson 07)
 for row in by_price:
     print("   ", row)
-# `lambda row: row[2]` is a tiny throwaway function meaning "given a row, use
-# its item at index 2". Lesson 10 covers lambda properly.
+# You'll also see this written as  key=lambda row: row[2]  - a lambda is a
+# one-line function with no name. Same thing; lesson 10 covers it.
 
 # reverse() just flips the current order (no sorting involved):
 letters = ["a", "b", "c"]
 letters.reverse()
 print("reversed in place:", letters)
 print()
+
+# TRY IT NOW (1 minute):
+#   ages = [34, 12, 56, 23].  Print them youngest-first WITHOUT changing ages,
+#   then print ages again to prove it's unchanged.
+#   (Answer: print(sorted(ages)) then print(ages))
 
 
 # =============================================================================
@@ -260,11 +327,11 @@ print(LINE)
 
 monthly_sales = [1200, 1450, 1100, 1800, 2100, 1950]
 
-total = sum(monthly_sales)
-count = len(monthly_sales)
+total = sum(monthly_sales)                      # all added up
+count = len(monthly_sales)                      # how many
 average = total / count
-best = max(monthly_sales)
-worst = min(monthly_sales)
+best = max(monthly_sales)                       # biggest
+worst = min(monthly_sales)                      # smallest
 best_month = monthly_sales.index(best) + 1      # +1 because months start at 1
 
 print(f"Months   : {count}")
@@ -275,6 +342,8 @@ print(f"Worst    : {worst:,}")
 print(f"Range    : {best - worst:,}")
 
 # A text bar chart - three lines of code, genuinely useful output.
+# In plain English: "for each month, numbered from 1, draw one # per 100 of
+# sales and print it all lined up".
 print("\nSales by month:")
 for index, amount in enumerate(monthly_sales, start=1):
     bar = "#" * (amount // 100)
@@ -328,6 +397,14 @@ print("nested after editing shallow's inner list:", nested)   # affected!
 # For a full independent copy use copy.deepcopy() - see lesson 18.
 print()
 
+# TRY IT NOW (1 minute):
+#   Run these three lines and explain the output to yourself out loud:
+#       x = ["a"]
+#       y = x
+#       y.append("b")
+#       print(x)
+#   (It prints ['a', 'b']: x and y are two names for ONE list.)
+
 
 # =============================================================================
 # PART 8 — REAL EXAMPLE: A TASK QUEUE
@@ -347,9 +424,14 @@ skipped = []
 
 print(f"Starting with {len(pending_files)} files")
 
+# In plain English:
+#   while there are still files waiting:
+#       take the first one off the front
+#       work out its extension (the part after the last dot)
+#       if it's allowed, mark it processed; otherwise, mark it skipped
 while pending_files:                    # loops while the list isn't empty
     filename = pending_files.pop(0)     # take from the front, like a real queue
-    extension = "." + filename.split(".")[-1]
+    extension = "." + filename.split(".")[-1]   # "report.csv" -> ".csv"
 
     if extension in ALLOWED:
         processed.append(filename)
@@ -402,44 +484,88 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A list holds many values in order:  scores = [90, 85, 77]
+#   * scores[0] is the first item, scores[-1] the last. Slices work like
+#     strings.
+#   * Lists can change: append (add to end), insert, remove, pop.
+#   * `in` checks membership; .count() and .index() search.
+#   * sorted(x) gives a NEW sorted list; x.sort() sorts x itself and
+#     returns None.
+#   * sum, len, max, min turn a list of numbers into statistics instantly.
+#   * b = a does NOT copy a list. Use a.copy().
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. nums = [5, 10, 15].  What is nums[1]?  And len(nums)?
+#   Q2. After nums.append(20), what is nums?
+#   Q3. What's the difference between sorted(nums) and nums.sort()?
+#   Q4. a = [1];  b = a;  b.append(2).  What is a?
+#   Q5. How do you get the average of a list called marks?
+#
+# ANSWERS
+#   A1. 10 (position 1 is the SECOND item). 3.
+#   A2. [5, 10, 15, 20]
+#   A3. sorted() returns a new list and leaves nums alone; .sort() changes
+#       nums itself and returns None.
+#   A4. [1, 2] - a and b are the same list.
+#   A5. sum(marks) / len(marks)
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Basics
+# WARM-UP A (easy) — Your first list
+#   Make a list of 3 colours. Print the list, and print how many there are.
+#
+# WARM-UP B (easy) — First and last
+#   Print the first colour and the last colour from your list.
+#
+# WARM-UP C (easy) — Add one
+#   Append a fourth colour to your list and print the list again.
+#
+# EXERCISE 1 (easy) — Basics
 #   Make a list of 5 of your favourite foods. Print the first, the last, the
 #   middle one, how many there are, and the list sorted alphabetically (without
 #   changing the original).
 #
-# EXERCISE 2 — Shopping list manager
+# EXERCISE 2 (easy) — Shopping list manager
 #   Start with ["milk", "eggs", "bread"]. Then: add "coffee" at the end, insert
 #   "butter" at the start, remove "eggs", and print the final list plus its
 #   length after every step.
 #
-# EXERCISE 3 — Statistics
+# EXERCISE 3 (medium) — Statistics
 #   Given temps = [18.5, 22.1, 19.8, 25.3, 21.0, 17.2, 23.9]:
-#   print the highest, lowest, average (2dp), and how many days were above
-#   the average.
+#   print the highest, lowest, and average (2dp).
+#   CHALLENGE part (needs a loop - lesson 07): also print how many days were
+#   above the average.
 #
-# EXERCISE 4 — Second largest
+# EXERCISE 4 (challenge - needs a loop from lesson 07) — Second largest
 #   Find the second largest number in [42, 7, 88, 19, 88, 3] WITHOUT using
 #   sort() on the original list. (Careful: 88 appears twice - the answer
 #   should be 42.)
 #
-# EXERCISE 5 — Table work (data analysis prep)
+# EXERCISE 5 (challenge - needs a loop from lesson 07) — Table work
 #   Using the `table` variable from PART 1 (name, qty, price):
 #     a) print each row as "Widget: 12 @ 4.99 = 59.88"
 #     b) print the grand total value of all stock
 #     c) print the name of the most valuable line (qty * price)
 #
-# EXERCISE 6 — Deduplicate, preserving order
+# EXERCISE 6 (challenge - needs a loop from lesson 07) — Deduplicate
 #   Turn ["a", "b", "a", "c", "b", "a"] into ["a", "b", "c"] while keeping the
-#   order of first appearance. (set() would lose the order - do it with a loop
-#   and a new list.)
+#   order of first appearance. Build a new list, adding each item only if it
+#   isn't already in it.
 #
-# EXERCISE 7 — Split a list in half
+# EXERCISE 7 (medium) — Split a list in half
 #   Given any list, print the first half and the second half. Make it work for
 #   both even and odd lengths (the middle item can go either way - decide and
 #   be consistent).
+#   Hint: len(data) // 2 is the middle position.
+#
+# It's completely fine to do exercises 4-6 AFTER lesson 07. Come back to them.
 
 # --- your exercise code goes below this line -------------------------------
 
@@ -451,6 +577,17 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   colours = ["red", "green", "blue"]
+#   print(colours, len(colours))       # -> ['red', 'green', 'blue'] 3
+#
+# WARM-UP B
+#   print(colours[0], colours[-1])     # -> red blue
+#
+# WARM-UP C
+#   colours.append("yellow")
+#   print(colours)
+#
 # EXERCISE 1
 #   foods = ["dosa", "ramen", "pizza", "biryani", "tacos"]
 #   print(foods[0], foods[-1], foods[len(foods) // 2])
@@ -460,34 +597,47 @@ print()
 #
 # EXERCISE 2
 #   shopping = ["milk", "eggs", "bread"]
-#   shopping.append("coffee");  print(shopping, len(shopping))
-#   shopping.insert(0, "butter"); print(shopping, len(shopping))
-#   shopping.remove("eggs");    print(shopping, len(shopping))
+#   shopping.append("coffee")
+#   print(shopping, len(shopping))
+#   shopping.insert(0, "butter")
+#   print(shopping, len(shopping))
+#   shopping.remove("eggs")
+#   print(shopping, len(shopping))
 #
 # EXERCISE 3
 #   temps = [18.5, 22.1, 19.8, 25.3, 21.0, 17.2, 23.9]
 #   avg = sum(temps) / len(temps)
 #   print(f"high {max(temps)} low {min(temps)} avg {avg:.2f}")
-#   above = [t for t in temps if t > avg]
-#   print(f"{len(above)} days above average")
+#   # the challenge part:
+#   above = 0
+#   for t in temps:                    # "for each temperature..."
+#       if t > avg:                    # "...if it's above the average..."
+#           above += 1                 # "...count it"
+#   print(f"{above} days above average")
 #
 # EXERCISE 4
 #   nums = [42, 7, 88, 19, 88, 3]
-#   unique_sorted = sorted(set(nums))       # set() drops duplicates
-#   print(unique_sorted[-2])                # -> 42
-#   # or without set():
 #   biggest = max(nums)
-#   print(max(n for n in nums if n != biggest))
+#   the_rest = []
+#   for n in nums:
+#       if n != biggest:               # leave out EVERY copy of the biggest
+#           the_rest.append(n)
+#   print(max(the_rest))               # -> 42
 #
 # EXERCISE 5
 #   grand_total = 0
-#   best_name, best_value = "", 0
-#   for name, qty, price in table:
+#   best_name = ""
+#   best_value = 0
+#   for row in table:
+#       name = row[0]
+#       qty = row[1]
+#       price = row[2]
 #       value = qty * price
 #       grand_total += value
 #       print(f"{name}: {qty} @ {price:.2f} = {value:.2f}")
 #       if value > best_value:
-#           best_name, best_value = name, value
+#           best_name = name
+#           best_value = value
 #   print(f"Grand total: {grand_total:.2f}")
 #   print(f"Most valuable: {best_name} ({best_value:.2f})")
 #
@@ -497,13 +647,13 @@ print()
 #   for item in source:
 #       if item not in unique:
 #           unique.append(item)
-#   print(unique)
+#   print(unique)                      # -> ['a', 'b', 'c']
 #
 # EXERCISE 7
 #   data = [1, 2, 3, 4, 5, 6, 7]
-#   middle = len(data) // 2
-#   print("first half :", data[:middle])
-#   print("second half:", data[middle:])    # odd middle item goes right
+#   middle = len(data) // 2            # 7 // 2 = 3
+#   print("first half :", data[:middle])     # [1, 2, 3]
+#   print("second half:", data[middle:])     # [4, 5, 6, 7] - odd middle goes right
 
 
 print("=" * 70)

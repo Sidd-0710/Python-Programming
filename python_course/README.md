@@ -10,8 +10,9 @@ web backends, analysing data, automating work, and engineering AI systems.
 
 ## How to use this
 
-**One file per session.** Each takes 45–95 minutes. At ~12 hours a week that's
-about 8 weeks for the whole course.
+**One file per session.** Each takes 45–110 minutes, and the longer ones have
+a break point marked halfway. At ~12 hours a week that's about 8 weeks for the
+whole course.
 
 For every file:
 
@@ -27,6 +28,26 @@ For every file:
 
 Don't comment out code after you finish a file. Leave it runnable so you can
 come back and tinker.
+
+### Built for complete beginners
+
+Every lesson has the same signposts, so you always know where you are:
+
+| You'll see | What it's for |
+|------------|---------------|
+| **BEFORE YOU START** | The lesson in 30 seconds: what you'll be able to do, and which PART teaches each thing |
+| **NEW WORDS** | Every new term in plain English. Come back to it whenever you forget one |
+| `# In plain English:` | A line or block of code explained in everyday words |
+| `# TRY IT NOW` | A 1–3 minute change to make and re-run. The answer is in [brackets] |
+| `GOOD PLACE FOR A BREAK` | The halfway point in the longer lessons |
+| `SCENERY, YOU CAN SKIP READING IT` | Helper code (a practice server, an offline simulator, a web page) that lets the lesson run. You don't need to understand it |
+| **RECAP** + **QUICK SELF-CHECK** | What you just learned, then five questions with answers |
+| **WARM-UP A/B/C** | Very easy first exercises, before the main ones |
+| `(easy)` `(medium)` `(challenge)` | How hard each exercise is. A challenge that needs a later lesson says which one |
+
+The code sticks to things already taught: loops before comprehensions,
+named functions instead of `lambda`, plain `if`/`else` instead of shortcuts.
+When a lesson has to use something new, a comment explains it right there.
 
 ---
 
@@ -125,6 +146,9 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 Never put an API key in your source code. Lesson 21 part 5 explains why.
+
+**After lesson 24:** the `fastapi_course/` folder next to this one teaches you to
+build real web APIs with FastAPI, starting from `00_how_the_web_works.py`.
 
 ---
 

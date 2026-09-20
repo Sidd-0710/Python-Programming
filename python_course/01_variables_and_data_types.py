@@ -3,8 +3,40 @@
  LESSON 01 — VARIABLES AND DATA TYPES
 ===============================================================================
 
-Time: about 60 minutes.
+Time: about 60 minutes (there's a good place for a break halfway).
 Assumes you have completed: 00_START_HERE.py
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. give a value a NAME, so your program can remember it        (PART 1)
+  2. check what KIND of value something is                        (PART 2)
+  3. turn text like "22" into a real number, and back again       (PART 3)
+  4. choose good names                                            (PART 4)
+  5. use None, Python's way of saying "nothing here yet"          (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  value        a single piece of data:  22   "Sidd"   True   3.5
+  variable     a NAME that points at a value.  age = 22  makes the name `age`
+  assign       to point a name at a value, using =
+  type         the KIND of value. Numbers, text and yes/no are different types
+  int          a whole number:            42   -7   0
+  float        a number with a decimal:   3.14   -0.5   2.0
+  str          text, in quotes:           "hello"   'Sidd'   "22"
+               ("str" is short for "string" - a string of letters)
+  bool         yes or no. Only two values exist:  True   False
+  None         a special value meaning "nothing here yet"
+  function     a named command that does a job. You RUN it by writing its name
+               and brackets:  print("hi")  type(22)  int("5")
+               What you put inside the brackets is what the function works on.
+  f-string     text with an f in front that can include variables:
+               f"Hello {name}"  ->  Hello Sidd
+
+You don't have to memorise this list. Just read it once, now.
 
 
 -------------------------------------------------------------------------------
@@ -110,12 +142,13 @@ print(LINE)
 
 # Create a variable by assigning to it. There is no separate "declare" step,
 # unlike in some other languages.
-first_name = "Sidd"
-age = 22
-height_cm = 250.5
-is_learning = True
+first_name = "Sidd"       # a str  - text always goes in quotes
+age = 22                  # an int - a whole number, no quotes
+height_cm = 178.5         # a float - it has a decimal point
+is_learning = True        # a bool - True or False, capital T/F, no quotes
 
 # Now use those names anywhere you'd use the value itself.
+# In plain English: "print the words Name:, then whatever first_name points at"
 print("Name:", first_name)
 print("Age:", age)
 print("Height:", height_cm)
@@ -130,7 +163,7 @@ print("score is now:   ", score)
 
 # Very common pattern: use a variable's own current value to compute its next
 # value. Python works out the RIGHT side first, using the old value.
-score = score + 5           # 25 + 5 = 30, then re-label
+score = score + 5           # in plain English: "score gets (score + 5)", so 25 + 5 = 30
 print("score after +5: ", score)
 
 # That pattern is so common it has a shortcut, called an augmented assignment.
@@ -138,10 +171,16 @@ score += 5                  # exactly the same as: score = score + 5
 print("score after += 5:", score)
 
 # The same shortcut exists for the other operations:
-score -= 10                 # subtract
-score *= 2                  # multiply
+score -= 10                 # in plain English: "take 10 away from score"
+score *= 2                  # in plain English: "double score" (* means multiply)
 print("score after -=10 then *=2:", score)
 print()
+
+# TRY IT NOW (1 minute):
+#   1. Change "Sidd" above to your own name. Run the file. Find your name in
+#      the output.
+#   2. Work out in your head what score will be at the end of PART 1, THEN run
+#      the file and check. (Answer: 10 -> 25 -> 30 -> 35 -> 25 -> 50.)
 
 
 # =============================================================================
@@ -151,8 +190,9 @@ print(LINE)
 print("PART 2 — CHECKING TYPES")
 print(LINE)
 
-# type() tells you what category a value belongs to. This is your main tool
-# when a TypeError confuses you: print the types and look.
+# type() is a FUNCTION (see NEW WORDS at the top): you put a value inside the
+# brackets and it tells you what category that value belongs to. This is your
+# main tool when a TypeError confuses you: print the types and look.
 print("type of first_name :", type(first_name))
 print("type of age        :", type(age))
 print("type of height_cm  :", type(height_cm))
@@ -161,7 +201,8 @@ print("type of None       :", type(None))
 print()
 
 # The `<class 'str'>` output just means "this value belongs to the str type".
-# `class` is a word you'll meet properly in lesson 16.
+# `class` is a word you'll meet properly in lesson 16. For now, read
+# <class 'int'> as simply "int".
 
 # WATCH OUT: quotes change everything.
 number_as_int = 22          # a number you can do maths with
@@ -178,6 +219,10 @@ print("type of 5   :", type(5))     # int
 print("type of 5.0 :", type(5.0))   # float - same value, different type
 print()
 
+# TRY IT NOW (1 minute):
+#   Guess the type of each of these BEFORE you check:   "5"    5    5.5    False
+#   Then add a line like   print(type("5"))   below and run it to check.
+
 
 # =============================================================================
 # PART 3 — CONVERTING BETWEEN TYPES
@@ -190,17 +235,19 @@ print(LINE)
 # str(), bool(). This is called "casting" or "type conversion".
 
 age_text = "22"                     # imagine this came from a web form
-age_number = int(age_text)          # convert text -> integer
+age_number = int(age_text)          # in plain English: "turn the text "22" into the number 22"
 print("next year you'll be:", age_number + 1)
 
 price_text = "19.99"
-price = float(price_text)           # convert text -> float
+price = float(price_text)           # convert text -> float (a decimal number)
 print("price with tax:", price * 1.2)
 
 # Converting the other way, to text, is how you glue values into a sentence
 # using `+`:
 count = 3
 print("You have " + str(count) + " new messages.")
+#   Step by step: str(count) turns 3 into "3", then + joins the three pieces
+#   of text into one:  "You have " + "3" + " new messages."
 
 # But there's a much better way to build sentences: the f-string.
 # Put an `f` before the opening quote, then put any variable in {curly braces}.
@@ -226,6 +273,19 @@ print()
 # int("abc") and int("19.99") both raise ValueError.
 # You'll learn to handle that properly in lesson 12 (error handling).
 
+# TRY IT NOW (2 minutes):
+#   1. Add the line   print(int("hello"))   here and run the file. Read the
+#      error's LAST line. That's a ValueError: "this value can't be converted".
+#      Then delete the line again.
+#   2. Write an f-string that prints:  In 10 years Sidd will be 32.
+#      using the first_name and age variables. (Answer in the RECAP section.)
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You've done the hardest half of the lesson.
+#  Stand up, get some water, then carry on with PART 4.
+# -----------------------------------------------------------------------------
+
 
 # =============================================================================
 # PART 4 — NAMING VARIABLES
@@ -243,7 +303,7 @@ print(LINE)
 
 # THE CONVENTIONS (break these and your code still runs, but it marks you out
 # as a beginner and makes your code harder to read):
-#   * use snake_case: lowercase words joined by underscores
+#   * use snake_case: lowercase words joined by underscores, like user_email
 #   * name things for what they MEAN, not what type they are
 #   * ALL_CAPS for values that never change (constants)
 
@@ -266,24 +326,33 @@ print(f"Cart: {items_in_cart} items for {user_email}, tax rate {tax_rate}")
 # free comment that can never go out of date.
 print()
 
+# TRY IT NOW (1 minute):
+#   Which of these names are ALLOWED?   my_age   2nd_place   total price   Total
+#   (Answer: my_age and Total are allowed. 2nd_place starts with a digit and
+#   total price has a space - both are SyntaxErrors.)
+
 
 # =============================================================================
-# PART 5 — MULTIPLE ASSIGNMENT (you already met this)
+# PART 5 — MULTIPLE ASSIGNMENT: SEVERAL NAMES IN ONE LINE
 # =============================================================================
 print(LINE)
 print("PART 5 — MULTIPLE ASSIGNMENT")
 print(LINE)
 
-a, b = 10, 20                   # a gets 10, b gets 20
+a, b = 10, 20                   # a gets 10, b gets 20 - matched up left to right
 print(f"a={a}, b={b}")
 
-x = y = 0                       # both names point at the same value
+x = y = 0                       # both names point at the same value, 0
 print(f"x={x}, y={y}")
 
 a, b = b, a                     # swap - the right side is worked out FIRST,
 print(f"after swap: a={a}, b={b}")   # so no temporary variable is needed
+#   Step by step: Python reads the right side as "20, 10" (the CURRENT values
+#   of b and a), and only then points a at 20 and b at 10.
 
 # Unpacking: the number of names must match the number of values exactly.
+# [1, 2, 3] is a LIST - several values inside square brackets. Lesson 06 is
+# all about lists; here you only need to know it holds 1, 2 and 3 in order.
 first, second, third = [1, 2, 3]
 print(f"first={first}, second={second}, third={third}")
 
@@ -311,6 +380,8 @@ print("middle_name:", middle_name, type(middle_name))
 
 # Check for it with `is`, not `==`. (Both work; `is None` is the accepted
 # style and reads better.)
+# In plain English: "is it true that middle_name is None?" - the answer is a
+# bool, True or False.
 print("Is middle_name empty?", middle_name is None)
 print()
 
@@ -374,9 +445,9 @@ item_name = "Wireless keyboard"
 unit_price = 45.50              # float - it has pennies
 quantity = 3                    # int - you can't buy 2.5 keyboards
 
-subtotal = unit_price * quantity
-tax = subtotal * TAX_RATE
-total_due = subtotal + tax
+subtotal = unit_price * quantity    # 45.50 x 3 = 136.5
+tax = subtotal * TAX_RATE           # 20% of 136.5 = 27.3
+total_due = subtotal + tax          # 136.5 + 27.3 = 163.8
 
 print(f"Invoice for: {CUSTOMER_NAME}")
 print(f"  {quantity} x {item_name} @ {unit_price:.2f}")
@@ -384,47 +455,97 @@ print(f"  Subtotal: {subtotal:.2f}")
 print(f"  Tax @ {TAX_RATE:.0%}: {tax:.2f}")
 print(f"  TOTAL DUE: {total_due:.2f}")
 
-# The `:.2f` inside the braces is a FORMAT SPEC: "show this as a float with
-# exactly 2 decimal places". `:.0%` means "show as a percentage, 0 decimals".
-# Without it you'd get 163.79999999999998 on your invoice. More in lesson 02.
+# The `:.2f` inside the braces is a FORMAT SPEC - an instruction about HOW to
+# show the value. You don't need to understand the letters yet; just copy these
+# two when you need them:
+#     {price:.2f}    show a decimal number with exactly 2 decimal places  163.80
+#     {rate:.0%}     show 0.2 as a percentage with no decimals            20%
+# Without them you'd get 163.79999999999998 on your invoice. Lesson 02 explains
+# format specs properly.
 print()
+
+
+# =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * A variable is a NAME pointing at a VALUE.   age = 22
+#   * = means "point this name at this value". It is an action, not a question.
+#   * Every value has a TYPE: int, float, str, bool, or None.
+#   * type(value) tells you the type. Print it whenever you're confused.
+#   * int(), float() and str() convert between types. Text from a form is
+#     ALWAYS a str until you convert it.
+#   * f-strings build sentences:  f"{name} is {age}"
+#   * Name things by what they mean, in snake_case. CONSTANTS in capitals.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. After  x = 5  and then  x = x + 2,  what is x?
+#   Q2. What type is "3.5"? And 3.5?
+#   Q3. What does  int("7") + 1  give? And  "7" + "1"?
+#   Q4. Why does  "age: " + 22  cause an error?
+#   Q5. The f-string from PART 3's TRY IT NOW: "In 10 years Sidd will be 32."
+#
+# ANSWERS
+#   A1. 7. The right side (5 + 2) is worked out first, then x points at 7.
+#   A2. "3.5" is a str (it's in quotes). 3.5 is a float.
+#   A3. 8 (maths on numbers).  "71" (joining text).
+#   A4. + can't mix text and a number. Use  f"age: {22}"  or  "age: " + str(22).
+#   A5. print(f"In 10 years {first_name} will be {age + 10}.")
 
 
 # =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Profile card
+# Start with the WARM-UPS - they're short, and they build the habits the
+# bigger exercises need. The labels tell you how hard each one is.
+#
+# WARM-UP A (easy) — Your first variable
+#   Create a variable called  city  holding the name of your city, and print
+#   it.
+#
+# WARM-UP B (easy) — Change it
+#   On the next line, assign a DIFFERENT city to the same variable and print
+#   it again. The first value is simply forgotten.
+#
+# WARM-UP C (easy) — A little maths
+#   Create  apples = 12  and  eaten = 5.  Create  left = apples - eaten
+#   and print an f-string that says:  I have 7 apples left.
+#
+# EXERCISE 1 (easy) — Profile card
 #   Create variables for your name (str), age (int), height in metres (float),
 #   and whether you drink coffee (bool). Print one f-string sentence using all
 #   four. Then print the type of each.
 #
-# EXERCISE 2 — The form-input bug
+# EXERCISE 2 (medium) — The form-input bug
 #   A web form always gives you text. Start with these two lines exactly:
 #       quantity_from_form = "4"
 #       price_from_form = "12.50"
 #   Calculate and print the correct total (50.00). You'll need conversions.
 #   First, deliberately try it WITHOUT converting and read the error.
 #
-# EXERCISE 3 — Unit converter
+# EXERCISE 3 (medium) — Unit converter
 #   Store a temperature in Celsius. Convert to Fahrenheit with  F = C * 9/5 + 32
 #   and print both, formatted to 1 decimal place (use :.1f).
 #   Then change only the Celsius variable and re-run.
 #
-# EXERCISE 4 — Fix the bad names
+# EXERCISE 4 (medium) — Fix the bad names
 #   Rewrite this with proper names and make it work:
 #       a = "Sidd"
 #       b = 22
 #       c = a + " is " + b + " years old"
 #   (There is a real bug in line c as well as bad naming. Find it.)
 #
-# EXERCISE 5 — Swap without a helper
+# EXERCISE 5 (medium) — Swap without a helper
 #   Set left = "apple" and right = "banana". Swap them in ONE line, then print.
 #
-# EXERCISE 6 — Split the bill
+# EXERCISE 6 (challenge) — Split the bill
 #   A restaurant bill is 187.40, shared between 5 people, with a 12.5% tip.
 #   Use named constants where it makes sense. Print what each person owes,
 #   to 2 decimal places.
+#   Hint: work it out in three steps - the tip, the grand total, then each
+#   person's share. One variable per step.
 
 # --- your exercise code goes below this line -------------------------------
 
@@ -435,6 +556,20 @@ print()
 # =============================================================================
 # SOLUTIONS
 # =============================================================================
+#
+# WARM-UP A
+#   city = "Pune"
+#   print(city)
+#
+# WARM-UP B
+#   city = "Mumbai"
+#   print(city)          # -> Mumbai. "Pune" is gone.
+#
+# WARM-UP C
+#   apples = 12
+#   eaten = 5
+#   left = apples - eaten
+#   print(f"I have {left} apples left.")      # -> I have 7 apples left.
 #
 # EXERCISE 1
 #   my_name = "Sidd"

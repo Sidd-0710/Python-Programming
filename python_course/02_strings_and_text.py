@@ -1,10 +1,40 @@
-"""
+r"""
 ===============================================================================
  LESSON 02 — STRINGS: WORKING WITH TEXT
 ===============================================================================
 
-Time: about 75 minutes.
+Time: about 75 minutes (there's a good place for a break halfway).
 Assumes: lesson 01 (variables, types, f-strings).
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. write text that contains quotes, new lines and tabs          (PART 1)
+  2. glue text together and repeat it                             (PART 2)
+  3. show numbers neatly: 2 decimals, commas, lined-up columns    (PART 3)
+  4. pull out single letters or chunks of text                    (PART 4)
+  5. clean text up: remove spaces, change case, search it         (PART 5)
+  6. split a sentence into words, and join words back together    (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  string       text. Any value in quotes:  "hello"  'Sidd'  "42"
+  character    one letter, digit, space or symbol inside a string
+  index        the POSITION of a character. Counting starts at 0, not 1
+  slice        a chunk of a string, taken by position:  word[0:3]
+  method       a function that belongs to a value, used with a dot:
+               name.upper()  means "give me name in capitals"
+  escape       a backslash \ that changes the meaning of the next character:
+               \n means "new line"
+  whitespace   invisible characters: spaces, tabs, new lines
+  list         several values in square brackets:  ["a", "b", "c"]
+               (lesson 06 is all about lists - here you only need to
+               recognise one)
+  immutable    "can't be changed". A string can never be edited in place -
+               you always make a NEW string instead
 
 
 -------------------------------------------------------------------------------
@@ -56,6 +86,7 @@ print(LINE)
 single = 'hello'
 double = "hello"
 print(single == double)         # True - genuinely the same string
+#                                 (== asks "are these equal?" - lesson 05)
 
 # The reason both exist: it lets you include the other kind of quote inside.
 print("It's a good day")             # apostrophe inside double quotes: easy
@@ -63,7 +94,7 @@ print('She said "hello" loudly')     # double quotes inside single quotes: easy
 
 # If you need the same kind inside, ESCAPE it with a backslash.
 # A backslash means "treat the next character literally, not as code".
-print("She said \"hello\" loudly")
+print("She said \"hello\" loudly")   # \" means "a real quote mark, not the end"
 print('It\'s a good day')
 
 # Useful escape sequences:
@@ -85,6 +116,12 @@ print()
 print(r"C:\Users\new\table.csv")     # without the r, \n and \t would wreck it
 print()
 
+# TRY IT NOW (1 minute):
+#   Write ONE print() line that shows these two lines of output:
+#       Roses are red
+#       Violets are blue
+#   (Answer: print("Roses are red\nViolets are blue") - the \n starts a new line.)
+
 
 # =============================================================================
 # PART 2 — COMBINING AND REPEATING
@@ -96,13 +133,14 @@ print(LINE)
 first_name = "Sidd"
 last_name = "Chirkute"
 
-# Concatenation with + (works only between strings - see lesson 01).
-full_name = first_name + " " + last_name
+# Concatenation ("joining") with + (works only between strings - see lesson 01).
+full_name = first_name + " " + last_name   # "Sidd" + " " + "Chirkute"
 print(full_name)
 
 # Repetition with * (string times a number).
 print("ab" * 3)                      # ababab
 print("=" * 30)                      # a divider - this is the LINE trick
+                                     # from the top of the file
 
 # f-strings: the modern way. Everything in {braces} is evaluated and inserted.
 age = 22
@@ -110,13 +148,18 @@ print(f"{first_name} {last_name} is {age} years old")
 
 # f-strings can hold any expression, not just a plain variable name:
 print(f"In 10 years: {age + 10}")
-print(f"Uppercase: {first_name.upper()}")
+print(f"Uppercase: {first_name.upper()}")   # .upper() is in PART 5
 print(f"Maths: {7 * 6}")
 
 # The = suffix prints the expression AND its value. A brilliant debugging tool:
 print(f"{age=}")                     # -> age=22
 print(f"{age * 2=}")                 # -> age * 2=44
 print()
+
+# TRY IT NOW (1 minute):
+#   Make a variable  city = "Pune"  and print an f-string that says:
+#       Sidd lives in Pune
+#   using first_name and city. Then print a line of 20 stars using *.
 
 
 # =============================================================================
@@ -131,15 +174,20 @@ percent = 0.0725
 count = 42
 
 # Inside an f-string, add a colon then a format spec to control the display.
+# The value itself never changes - only how it's SHOWN.
 print(f"2 decimals:      {price:.2f}")      # 1234.57  (rounds for display)
 print(f"0 decimals:      {price:.0f}")      # 1235
 print(f"Thousands comma: {price:,.2f}")     # 1,234.57
 print(f"As a percentage: {percent:.1%}")    # 7.3%
 print()
+#   How to read  :.2f  -  ":" starts the format spec, ".2" means 2 decimal
+#   places, "f" means "show it as a decimal number". You'll mostly copy these
+#   four; you don't need to invent new ones.
 
 # Alignment - the key to readable terminal tables and reports.
 #   <  left-align      >  right-align      ^  centre
 # The number is the total width to pad out to.
+#   {'Item':<15}  means "the text Item, left-aligned in a space 15 characters wide"
 print(f"|{'Item':<15}|{'Qty':>5}|{'Price':>10}|")
 print(f"|{'-' * 15}|{'-' * 5}|{'-' * 10}|")
 print(f"|{'Keyboard':<15}|{3:>5}|{45.5:>10.2f}|")
@@ -148,8 +196,12 @@ print(f"|{'Cable':<15}|{100:>5}|{3.2:>10.2f}|")
 print()
 
 # Zero-padding, handy for IDs, invoice numbers and timestamps.
-print(f"Invoice INV-{count:05d}")           # INV-00042
+print(f"Invoice INV-{count:05d}")           # INV-00042  (5 digits wide, 0-padded)
 print()
+
+# TRY IT NOW (1 minute):
+#   Print the price 19.5 as  19.50  using :.2f.  Then print 0.25 as  25%
+#   using :.0%.  (Answers: f"{19.5:.2f}" and f"{0.25:.0%}")
 
 
 # =============================================================================
@@ -169,7 +221,7 @@ print("word[1] :", word[1])      # y
 print("word[5] :", word[5])      # n  - last character
 print("word[-1]:", word[-1])     # n  - last, without needing the length
 print("word[-2]:", word[-2])     # o  - second from last
-print("len()   :", len(word))    # 6  - how many characters
+print("len()   :", len(word))    # 6  - how many characters (len = length)
 
 # word[6] would raise: IndexError: string index out of range
 # Because valid indexes stop at len-1. This off-by-one is a rite of passage.
@@ -185,6 +237,8 @@ print("word[-3:] :", word[-3:])   # hon   - last 3 characters
 print("word[::2] :", word[::2])   # Pto   - every 2nd character (a step)
 print("word[::-1]:", word[::-1])  # nohtyP - reversed (step of -1)
 print()
+#   The pattern is  [start:stop:step].  You'll use [start:stop] all the time;
+#   the step version is rarer - [::-1] to reverse is the one worth remembering.
 
 # WHY "stop is excluded" is actually convenient:
 #   * the length of word[a:b] is simply b - a
@@ -198,8 +252,19 @@ print("word[0:999]:", word[0:999])
 
 # A practical use: truncating text for a preview, like a blog listing.
 article = "Python is a general purpose programming language used everywhere"
-print("Preview:", article[:30] + "...")
+print("Preview:", article[:30] + "...")    # the first 30 characters, then ...
 print()
+
+# TRY IT NOW (2 minutes):
+#   With  word = "Python",  predict each of these, then check by printing them:
+#       word[2]     word[-1]     word[1:4]     word[:2]
+#   (Answers: t   n   yth   Py)
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You've learned how text is built and how to cut it
+#  up. After the break: the tools that CLEAN text (PARTS 5-7).
+# -----------------------------------------------------------------------------
 
 
 # =============================================================================
@@ -222,7 +287,7 @@ print(f"strip()     : '{name.strip()}'")        # removes whitespace both ends
 print(f"lstrip()    : '{name.lstrip()}'")       # left only
 print(f"rstrip()    : '{name.rstrip()}'")       # right only
 print(f"title()     : '{name.title()}'")        # Capitalises Each Word
-print(f"replace()   : '{name.replace('Sidd', 'Sid')}'")
+print(f"replace()   : '{name.replace('Sidd', 'Sid')}'")   # swap "Sidd" for "Sid"
 print()
 
 # ***** THE #1 STRING BUG *****
@@ -258,6 +323,11 @@ print()
 raw_input_text = "  Sales Report 2024.CSV  "
 slug = raw_input_text.strip().lower().replace(" ", "_")
 print(f"'{raw_input_text}' -> '{slug}'")
+#   The same thing, one step per line - exactly what the chain above does:
+#       step1 = raw_input_text.strip()       "Sales Report 2024.CSV"
+#       step2 = step1.lower()                "sales report 2024.csv"
+#       slug  = step2.replace(" ", "_")      "sales_report_2024.csv"
+#   When a chain confuses you, split it up like this and print each step.
 print()
 
 # --- find() and index() ---
@@ -267,6 +337,11 @@ print("find('zebra')   :", sentence.find("zebra"))     # -1 = not found
 # .index() does the same but raises ValueError when missing. Use .find() when
 # "not there" is a normal possibility, .index() when it's a real problem.
 print()
+
+# TRY IT NOW (2 minutes):
+#   Start with  messy_name = "   aNA lopez  ".  Using methods, make it
+#   "Ana Lopez" and print it. Remember to SAVE the result with =.
+#   (Answer: clean_name = messy_name.strip().title())
 
 
 # =============================================================================
@@ -280,9 +355,9 @@ print(LINE)
 
 # split() breaks a string into a LIST of pieces (lists are lesson 06).
 csv_row = "Sidd,Chirkute,22,Mumbai"
-fields = csv_row.split(",")
+fields = csv_row.split(",")                 # cut the text at every comma
 print("split on comma:", fields)
-print("the third field:", fields[2])
+print("the third field:", fields[2])        # lists count from 0 too: [2] is the 3rd
 
 # With no argument, split() splits on any run of whitespace - perfect for
 # breaking a sentence into words, or parsing a log line.
@@ -294,6 +369,9 @@ print("word count:", len(words))
 # structured and the rest is free text.
 log_line = "2024-05-01 ERROR Database connection failed on retry 3"
 date, level, message = log_line.split(" ", 2)
+#   In plain English: "split at spaces, but only the first 2 times" - so you
+#   get exactly 3 pieces, and the whole message stays in one piece.
+#   `date, level, message = ...` is lesson 01's multiple assignment.
 print(f"date={date}  level={level}  message='{message}'")
 print()
 
@@ -311,17 +389,24 @@ print("Attending: " + ", ".join(attendees))
 
 # IMPORTANT: join() only works on strings. Numbers must be converted first,
 # or you get: TypeError: sequence item 0: expected str instance, int found
-scores = [90, 85, 77]
-# ", ".join(scores)                       # would fail
-print("Scores: " + ", ".join(str(s) for s in scores))   # converts each first
+#     ", ".join([90, 85, 77])                      # would fail - they're numbers
+score_texts = [str(90), str(85), str(77)]           # turn each number into text
+print("Scores: " + ", ".join(score_texts))
 print()
 
 # The classic round trip - split, change something, join back. This is 80% of
 # real text automation:
 filename = "quarterly sales report.txt"
 clean_filename = "_".join(filename.split())
+#   Step by step:  filename.split()  ->  ["quarterly", "sales", "report.txt"]
+#                  "_".join(...)     ->  "quarterly_sales_report.txt"
 print(f"'{filename}' -> '{clean_filename}'")
 print()
+
+# TRY IT NOW (2 minutes):
+#   Start with  date_text = "2024/12/25".  Use split and join to print
+#   2024-12-25.
+#   (Answer: print("-".join(date_text.split("/"))))
 
 
 # =============================================================================
@@ -338,8 +423,8 @@ print(LINE)
 raw_signup = "   SIDD.Chirkute@Example.COM   "
 
 email = raw_signup.strip().lower()          # trim, then normalise case
-username = email.split("@")[0]              # everything before the @
-domain = email.split("@")[1]                # everything after
+username = email.split("@")[0]              # piece 0: everything before the @
+domain = email.split("@")[1]                # piece 1: everything after
 display_name = username.replace(".", " ").title()
 
 print(f"raw         : '{raw_signup}'")
@@ -395,43 +480,83 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * Strings are text in quotes. \n is a new line, \t a tab.
+#   * + joins strings, * repeats them, f-strings mix in variables.
+#   * Format specs after a colon:  {price:.2f}  {rate:.1%}  {name:<10}
+#   * Indexes start at 0. word[0] is the first character, word[-1] the last.
+#   * Slices  word[start:stop]  include start, EXCLUDE stop.
+#   * Methods (upper, lower, strip, replace...) RETURN a new string - save it!
+#   * text.split(",") makes a list of pieces; ", ".join(pieces) glues them back.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. With  s = "banana",  what is  s[0]?  s[-1]?  s[1:3]?
+#   Q2. After  name = " Ana "  and  name.strip(),  what is name?
+#   Q3. What does  "a,b,c".split(",")  give?
+#   Q4. What does  "-".join(["1", "2", "3"])  give?
+#   Q5. How do you show 3.14159 as 3.14 inside an f-string?
+#
+# ANSWERS
+#   A1. "b",  "a",  "an"  (positions 1 and 2 - stop is excluded).
+#   A2. Still " Ana ". strip() RETURNED a new string that nobody saved.
+#       Write  name = name.strip().
+#   A3. The list  ["a", "b", "c"].
+#   A4. "1-2-3".
+#   A5. f"{3.14159:.2f}"
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Initials
-#   Given full_name = "Siddheshwar Vijay Chirkute", print "S.V.C."
-#   Hint: split into words, take [0] of each, join with ".".
+# WARM-UP A (easy) — Shout it
+#   Store your name in a variable and print it in CAPITAL letters.
 #
-# EXERCISE 2 — Email validator (a rough one)
-#   For each of these, print the address and whether it looks valid:
-#       "sidd@example.com", "not-an-email", "a@b.co", "@nope.com"
+# WARM-UP B (easy) — First and last
+#   Print the FIRST letter and the LAST letter of your name, using [0] and [-1].
+#
+# WARM-UP C (easy) — Repeat
+#   Print "ha" five times in a row (hahahahaha) using *.
+#
+# EXERCISE 1 (medium) — Initials
+#   Given full_name = "Siddheshwar Vijay Chirkute", print "S.V.C."
+#   Hint: split into words first. Each word is then words[0], words[1] and
+#   words[2], and the first letter of a word is word[0].
+#
+# EXERCISE 2 (medium) — Email validator (a rough one)
+#   For ONE address at a time, print the address and whether it looks valid.
+#   Try it with each of:  "sidd@example.com", "not-an-email", "a@b.co", "@nope.com"
 #   Treat it as valid if it contains "@", has a "." after the "@", and has at
 #   least one character before the "@".
+#   Hint: address.find("@") gives the position of the @ (or -1).
 #
-# EXERCISE 3 — Filename cleaner (automation)
+# EXERCISE 3 (easy) — Filename cleaner (automation)
 #   Turn "  My Report FINAL (v2).PDF  " into "my_report_final_(v2).pdf".
 #   Steps: strip, lowercase, replace spaces with underscores.
 #
-# EXERCISE 4 — Log line parser
+# EXERCISE 4 (medium) — Log line parser
 #   Given: "2024-05-01 14:32:07 ERROR Payment gateway timeout"
 #   Print the date, the time, the level, and the message separately, then
 #   print just the YEAR from the date. Use split() and slicing.
 #
-# EXERCISE 5 — Receipt table
+# EXERCISE 5 (medium) — Receipt table
 #   Print a neat 3-column table (Item, Qty, Price) with aligned columns and
 #   prices to 2 decimal places, using f-string alignment, for:
 #       Coffee 2 3.50 / Sandwich 1 6.75 / Cookie 3 1.2
 #   Then print a TOTAL row.
 #
-# EXERCISE 6 — Palindrome check
+# EXERCISE 6 (medium) — Palindrome check
 #   Check whether "A man a plan a canal Panama" is a palindrome (reads the same
 #   backwards) once you remove spaces and ignore capitals.
 #   Hint: .replace(" ", ""), .lower(), and the [::-1] slice.
 #
-# EXERCISE 7 — Word frequency, the manual way
-#   Count how many words are in a sentence, and how many of them are longer
-#   than 4 characters. (You can do this with split, len, and counting by hand
-#   for now - lesson 07 will make it elegant.)
+# EXERCISE 7 (challenge) — Word count
+#   Count how many words are in a sentence. Then, for a sentence of 5 words,
+#   count how many are longer than 4 characters by checking len() of each
+#   word one at a time. (Lesson 07's loops make the second part much shorter.)
 
 # --- your exercise code goes below this line -------------------------------
 
@@ -443,21 +568,35 @@ print()
 # SOLUTIONS
 # =============================================================================
 #
+# WARM-UP A
+#   my_name = "Sidd"
+#   print(my_name.upper())          # -> SIDD
+#
+# WARM-UP B
+#   my_name = "Sidd"
+#   print(my_name[0], my_name[-1])  # -> S d
+#
+# WARM-UP C
+#   print("ha" * 5)                 # -> hahahahaha
+#
 # EXERCISE 1
 #   full_name = "Siddheshwar Vijay Chirkute"
-#   parts = full_name.split()
-#   initials = ".".join(p[0] for p in parts) + "."
-#   print(initials)                      # -> S.V.C.
+#   words = full_name.split()                   # ["Siddheshwar", "Vijay", "Chirkute"]
+#   initials = words[0][0] + "." + words[1][0] + "." + words[2][0] + "."
+#   print(initials)                             # -> S.V.C.
+#   words[0][0] reads as "word number 0, then its letter number 0".
+#   Once you know loops (lesson 07) and generators (lesson 11), this becomes:
+#       ".".join(word[0] for word in words) + "."
 #
 # EXERCISE 2
-#   addr = "sidd@example.com"
-#   has_at = "@" in addr
-#   before = addr.split("@")[0] if has_at else ""
-#   after = addr.split("@")[1] if has_at else ""
-#   valid = has_at and len(before) > 0 and "." in after
-#   print(addr, valid)
-#   (The `x if y else z` form is lesson 05. Plain version: check `has_at`
-#    first with an if statement.)
+#   address = "sidd@example.com"
+#   at = address.find("@")               # position of the @, or -1 if missing
+#   before = address[:at]                # the text before the @
+#   after = address[at + 1:]             # the text after the @
+#   valid = at > 0 and "." in after      # `and`: BOTH must be True (lesson 05)
+#   print(address, valid)
+#   Why `at > 0`: -1 means there's no @ at all, and 0 means the @ is the very
+#   first character - so nothing comes before it. Both are invalid.
 #
 # EXERCISE 3
 #   raw = "  My Report FINAL (v2).PDF  "
@@ -469,6 +608,7 @@ print()
 #   date, time, level, message = line.split(" ", 3)
 #   print(date, time, level, message, sep=" | ")
 #   print("Year:", date[:4])             # or date.split("-")[0]
+#   (sep=" | " tells print() what to put BETWEEN the items, instead of a space.)
 #
 # EXERCISE 5
 #   print(f"{'Item':<12}{'Qty':>5}{'Price':>10}")
@@ -486,11 +626,18 @@ print()
 #   print(cleaned == cleaned[::-1])      # -> True
 #
 # EXERCISE 7
-#   sentence = "Python makes text processing genuinely straightforward"
+#   sentence = "Python makes text processing easy"
 #   words = sentence.split()
-#   print("Words:", len(words))
-#   long_words = [w for w in words if len(w) > 4]   # lesson 11 syntax
-#   print("Longer than 4:", len(long_words), long_words)
+#   print("Words:", len(words))                              # -> 5
+#   long_count = 0
+#   long_count += len(words[0]) > 4      # True counts as 1, False as 0
+#   long_count += len(words[1]) > 4
+#   long_count += len(words[2]) > 4
+#   long_count += len(words[3]) > 4
+#   long_count += len(words[4]) > 4
+#   print("Longer than 4:", long_count)                      # -> 3
+#   Repetitive, right? That feeling is exactly why loops exist (lesson 07):
+#       long_words = [w for w in words if len(w) > 4]        # lesson 11 syntax
 
 
 print("=" * 70)

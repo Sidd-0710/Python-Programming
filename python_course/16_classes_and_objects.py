@@ -3,8 +3,42 @@
  LESSON 16 — CLASSES AND OBJECTS: BUNDLING DATA WITH BEHAVIOUR
 ===============================================================================
 
-Time: about 85 minutes.
+Time: about 85 minutes (there's a good place for a break halfway).
 Assumes: lessons 01-15 (especially 09 dictionaries and 10 functions).
+
+
+-------------------------------------------------------------------------------
+ BEFORE YOU START - THE LESSON IN 30 SECONDS
+-------------------------------------------------------------------------------
+
+IN THIS LESSON YOU WILL LEARN TO:
+  1. create your own TYPE of thing, with its own data and actions  (PART 1)
+  2. understand `self` - the word every class uses                 (PART 2)
+  3. share data between all objects, or keep it per object         (PART 3)
+  4. make your objects work with print(), +, == and sorting        (PART 4)
+  5. protect an object's data with properties                      (PART 5)
+  6. build a real shopping cart from classes                       (PART 6)
+
+NEW WORDS - come back here whenever you forget one:
+
+  class         a BLUEPRINT for a kind of thing:  class Dog:
+  object        one actual thing built from the blueprint:  rex = Dog(...)
+                (also called an INSTANCE)
+  attribute     a piece of data belonging to an object:  rex.name
+  method        a function belonging to an object:  rex.bark()
+  __init__      the method that runs automatically when an object is created.
+                It sets up the object's starting data
+  self          inside a class, means "THIS particular object"
+  class attribute     data shared by EVERY object of the class
+  instance attribute  data belonging to just ONE object
+  dunder        "double underscore" methods like __init__ and __str__ that
+                plug your class into Python's built-in behaviour
+  property      a method that you use like an attribute - without brackets
+  @             a DECORATOR: a label above a function that changes how it
+                works.  @property  is the only one you need today
+
+WHY THIS MATTERS FOR YOU: FastAPI describes every piece of API data as a class
+(Pydantic models). If classes make sense, FastAPI will too.
 
 
 -------------------------------------------------------------------------------
@@ -97,6 +131,7 @@ class Dog:
         """Set up a new dog. Runs automatically when you create one."""
         # `self` refers to THIS PARTICULAR dog being created.
         # These are ATTRIBUTES - the object's own data.
+        # In plain English: "this dog's name is the name we were given".
         self.name = name
         self.breed = breed
         self.age = age
@@ -113,11 +148,16 @@ class Dog:
 
     def describe(self):
         """Methods can read the object's own attributes via self."""
-        trick_text = ", ".join(self.tricks) if self.tricks else "no tricks yet"
+        if self.tricks:
+            trick_text = ", ".join(self.tricks)
+        else:
+            trick_text = "no tricks yet"
         return f"{self.name} is a {self.age}-year-old {self.breed} ({trick_text})"
 
 
 # Creating objects. `Dog(...)` calls __init__ behind the scenes.
+# In plain English: "build a new Dog from the blueprint, named Rex, a Labrador,
+# aged 3 - and call it rex".
 rex = Dog("Rex", "Labrador", 3)
 bella = Dog("Bella", "Poodle", 5)
 
@@ -134,6 +174,10 @@ print("  rex.name:", rex.name)
 rex.age = 4                          # a birthday
 print("  after birthday:", rex.describe())
 print()
+
+# TRY IT NOW (2 minutes):
+#   Create a third dog with your own choice of name, breed and age. Teach it
+#   one trick, then print its describe().
 
 
 # =============================================================================
@@ -183,6 +227,9 @@ class Counter:
 
 counter = Counter()
 print(" ", counter.increment().increment().double().report())
+#   Read it left to right: increment (1), increment again (2), double (4),
+#   then report. Each method gives back the same counter, so the next one can
+#   be called on it straight away.
 print()
 
 
@@ -268,6 +315,16 @@ except ValueError as error:
     print("  blocked:", error)
 print()
 
+# TRY IT NOW (2 minutes):
+#   Deposit 50 into ana_account, then print ana_account.balance.
+#   Then try ana_account.deposit(-5) and read the error.
+
+
+# -----------------------------------------------------------------------------
+#  GOOD PLACE FOR A BREAK. You can now write classes, create objects, and use
+#  self. After the break: making objects feel built-in, and a real example.
+# -----------------------------------------------------------------------------
+
 
 # =============================================================================
 # PART 4 — DUNDER METHODS: MAKING OBJECTS FEEL BUILT-IN
@@ -280,6 +337,10 @@ print(LINE)
 # hook into Python's built-in syntax. __init__ is one you already know.
 # Implementing others lets YOUR objects work with print(), len(), ==, +, and
 # sorting - just like built-in types.
+#
+# You never CALL these yourself. Python calls them for you:
+#     print(price)        -> Python calls price.__str__()
+#     price + shipping    -> Python calls price.__add__(shipping)
 
 
 class Money:
@@ -354,7 +415,8 @@ print()
 # ALWAYS define __repr__ on your classes. Without it, debugging shows
 # `<__main__.Money object at 0x7f8b1c0d2e50>`, which tells you nothing.
 
-
+# OPTIONAL DEPTH - a class that behaves like a list. Skim it now; come back
+# when you need to build a collection of your own.
 class Playlist:
     """A container class - shows __len__, __getitem__, __iter__, __contains__."""
 
@@ -409,6 +471,7 @@ print(LINE)
 #   self.name      PUBLIC    - use it freely
 #   self._name     PROTECTED - "internal; don't rely on this" (convention only)
 #   self.__name    PRIVATE   - name-mangled, genuinely awkward to reach
+#                              (rarely needed - you can ignore this one)
 
 
 class Temperature:
@@ -417,11 +480,15 @@ class Temperature:
     def __init__(self, celsius=0.0):
         self._celsius = celsius          # the underscore says "internal"
 
+    # @property turns the method below into something you READ like an
+    # attribute: temp.celsius, with no brackets.
     @property
     def celsius(self):
         """Read like an attribute, but it's really a method call."""
         return self._celsius
 
+    # @celsius.setter says "and THIS method runs when someone ASSIGNS
+    # temp.celsius = something" - so we get a chance to check the value.
     @celsius.setter
     def celsius(self, value):
         """Runs on assignment - so we can VALIDATE."""
@@ -457,6 +524,9 @@ print()
 # line of calling code. In many languages you must write getters and setters up
 # front just in case. In Python you add them only when you actually need them.
 
+# TRY IT NOW (1 minute):
+#   Set temp.celsius = 0 and print temp.fahrenheit. (Answer: 32.0)
+
 
 # =============================================================================
 # PART 6 — REAL EXAMPLE: A SHOPPING CART (WEB BACKEND SHAPE)
@@ -470,7 +540,7 @@ class Product:
     """One item in a catalogue."""
 
     def __init__(self, sku, name, price, stock):
-        self.sku = sku
+        self.sku = sku                   # "stock keeping unit" - a product code
         self.name = name
         self.price = price
         self.stock = stock
@@ -483,8 +553,10 @@ class Product:
 
 
 class CartItem:
+    """One line in a cart: a product and how many of it."""
+
     def __init__(self, product, quantity):
-        self.product = product
+        self.product = product           # an object inside an object
         self.quantity = quantity
 
     @property
@@ -510,7 +582,12 @@ class Cart:
         if quantity < 1:
             raise ValueError("quantity must be at least 1")
 
-        already = self._items[product.sku].quantity if product.sku in self._items else 0
+        # How many of this product are in the cart already?
+        if product.sku in self._items:
+            already = self._items[product.sku].quantity
+        else:
+            already = 0
+
         if not product.in_stock(already + quantity):
             raise ValueError(
                 f"only {product.stock} of {product.name} left "
@@ -556,18 +633,16 @@ class Cart:
 
     def receipt(self):
         lines = [f"Receipt for {self.customer}", "-" * 44]
-        for item in self:
+        for item in self:                # works because of __iter__ above
             lines.append(
                 f"  {item.product.name:<20}{item.quantity:>3} x "
                 f"{item.product.price:>6.2f} = {item.line_total:>7.2f}"
             )
-        lines += [
-            "-" * 44,
-            f"  {'Subtotal':<32}{self.subtotal:>10.2f}",
-            f"  {'Tax (20%)':<32}{self.tax:>10.2f}",
-            f"  {'Shipping':<32}{self.shipping:>10.2f}",
-            f"  {'TOTAL':<32}{self.total:>10.2f}",
-        ]
+        lines.append("-" * 44)
+        lines.append(f"  {'Subtotal':<32}{self.subtotal:>10.2f}")
+        lines.append(f"  {'Tax (20%)':<32}{self.tax:>10.2f}")
+        lines.append(f"  {'Shipping':<32}{self.shipping:>10.2f}")
+        lines.append(f"  {'TOTAL':<32}{self.total:>10.2f}")
         if self.shipping == 0 and self.subtotal > 0:
             lines.append("  (free shipping applied)")
         return "\n".join(lines)
@@ -620,7 +695,8 @@ class BrokenTeam:
     def add(self, name):
         self.members.append(name)
 
-team_a, team_b = BrokenTeam(), BrokenTeam()
+team_a = BrokenTeam()
+team_b = BrokenTeam()
 team_a.add("Sidd")
 print("  team_b.members:", team_b.members, "<- Sidd leaked into the other team")
 
@@ -628,7 +704,8 @@ class FixedTeam:
     def __init__(self):
         self.members = []            # a fresh list per instance
 
-fixed_a, fixed_b = FixedTeam(), FixedTeam()
+fixed_a = FixedTeam()
+fixed_b = FixedTeam()
 fixed_a.members.append("Sidd")
 print("  fixed_b.members:", fixed_b.members, "<- correctly empty")
 
@@ -649,42 +726,89 @@ print()
 
 
 # =============================================================================
+# RECAP - WHAT YOU JUST LEARNED
+# =============================================================================
+#
+#   * class Dog:  defines a blueprint.  rex = Dog("Rex", ...)  builds an object.
+#   * __init__(self, ...) runs automatically to set up each new object.
+#   * self means "this object". Use self.name inside methods.
+#   * Attributes are the object's data (rex.name); methods are its actions
+#     (rex.bark()).
+#   * Class attributes are shared by all objects; self.x attributes are
+#     per object. Never put a list or dict as a class attribute.
+#   * Dunders (__str__, __repr__, __eq__, __add__...) plug into print, ==, +.
+#   * @property makes a method readable like an attribute - and lets a setter
+#     validate new values.
+#
+# QUICK SELF-CHECK - answer in your head first, then read the answers below.
+#
+#   Q1. What's the difference between a class and an object?
+#   Q2. What does __init__ do, and when does it run?
+#   Q3. Inside a method, why write self.name and not just name?
+#   Q4. You forgot `self` in  def bark():.  What error do you get?
+#   Q5. What does @property let you write?
+#
+# ANSWERS
+#   A1. A class is the blueprint; an object is one thing built from it.
+#   A2. It sets up a new object's starting data. It runs automatically when
+#       you create the object:  Dog("Rex", ...).
+#   A3. self.name is the object's attribute. A bare `name` would be a local
+#       variable that doesn't exist - NameError.
+#   A4. TypeError: bark() takes 0 positional arguments but 1 was given.
+#   A5. temp.celsius (no brackets) instead of temp.celsius() - and a setter
+#       can validate  temp.celsius = -300.
+
+
+# =============================================================================
 # EXERCISES
 # =============================================================================
 #
-# EXERCISE 1 — Rectangle
+# WARM-UP A (easy) — A Cat
+#   Write a Cat class whose __init__ takes a name. Give it a meow() method that
+#   returns "<name> says meow". Create a cat and print its meow().
+#
+# WARM-UP B (easy) — Two cats
+#   Create a second cat with a different name. Print both names, to see each
+#   object keeps its own data.
+#
+# WARM-UP C (easy) — A method that changes things
+#   Add a rename(new_name) method to Cat that changes self.name. Rename one cat
+#   and print its meow() again.
+#
+# EXERCISE 1 (easy) — Rectangle
 #   Write a Rectangle class with width and height. Give it area(), perimeter(),
 #   an is_square property, and a __str__. Create three and print their details.
 #
-# EXERCISE 2 — Student
+# EXERCISE 2 (medium) — Student
 #   Write a Student class holding a name and a list of grades. Methods:
 #   add_grade(), average (a property), best (a property), and a letter_grade()
 #   method using lesson 05's rules. Handle the no-grades-yet case.
 #
-# EXERCISE 3 — BankAccount, extended
-#   Add to PART 3's BankAccount: an overdraft_limit, a transfer_to(other,
-#   amount) method, and a history() method showing a running balance after
-#   each transaction.
+# EXERCISE 3 (medium) — BankAccount, extended
+#   Add to PART 3's BankAccount: a transfer_to(other, amount) method that
+#   withdraws from this account and deposits into the other one.
+#   CHALLENGE: also add an overdraft_limit, and a history() method showing a
+#   running balance after each transaction.
 #
-# EXERCISE 4 — Timer with dunders
+# EXERCISE 4 (medium) — Timer with dunders
 #   Write a Duration class holding seconds. Implement __str__ ("1h 2m 3s"),
 #   __add__, __lt__ and __eq__. Sort a list of them.
 #
-# EXERCISE 5 — Inventory with properties
+# EXERCISE 5 (medium) — Inventory with properties
 #   Write an Item class where `quantity` is a property that refuses negatives,
 #   and `total_value` is computed from quantity * unit_price. Prove the
 #   validation works.
 #
-# EXERCISE 6 — Convert a dict-based design
+# EXERCISE 6 (challenge) — Convert a dict-based design
 #   Take the `orders` data from lesson 14 and design an Order class for it.
 #   Give it a `total` property and a `is_revenue` property (paid, not
 #   refunded). Then rewrite one of lesson 14's reports using your class.
 #
-# EXERCISE 7 — Deck of cards
+# EXERCISE 7 (challenge) — Deck of cards
 #   Write Card and Deck classes. Deck should support len(), iteration,
 #   shuffle(), deal(n), and printing. Use lesson 03's random module.
 #
-# EXERCISE 8 — When NOT to use a class
+# EXERCISE 8 (medium) — When NOT to use a class
 #   Find something in an earlier lesson that you could rewrite as a class, do
 #   it, and then argue honestly with yourself about whether it's an
 #   improvement. Sometimes the answer is no - that's a useful thing to notice.
@@ -698,6 +822,27 @@ print()
 # =============================================================================
 # SOLUTIONS
 # =============================================================================
+#
+# WARM-UP A
+#   class Cat:
+#       def __init__(self, name):
+#           self.name = name
+#       def meow(self):
+#           return f"{self.name} says meow"
+#   tom = Cat("Tom")
+#   print(tom.meow())                  # -> Tom says meow
+#
+# WARM-UP B
+#   luna = Cat("Luna")
+#   print(tom.name, luna.name)         # -> Tom Luna
+#
+# WARM-UP C
+#   # inside the Cat class:
+#   def rename(self, new_name):
+#       self.name = new_name
+#   # then:
+#   tom.rename("Thomas")
+#   print(tom.meow())                  # -> Thomas says meow
 #
 # EXERCISE 1
 #   class Rectangle:
@@ -727,27 +872,49 @@ print()
 #           self.grades.append(grade)
 #       @property
 #       def average(self):
-#           return sum(self.grades) / len(self.grades) if self.grades else None
+#           if not self.grades:
+#               return None
+#           return sum(self.grades) / len(self.grades)
 #       @property
 #       def best(self):
-#           return max(self.grades) if self.grades else None
+#           if not self.grades:
+#               return None
+#           return max(self.grades)
 #       def letter_grade(self):
 #           avg = self.average
 #           if avg is None:
 #               return "N/A"
-#           for threshold, letter in ((90, "A"), (80, "B"), (70, "C"), (60, "D")):
-#               if avg >= threshold:
-#                   return letter
+#           if avg >= 90:
+#               return "A"
+#           if avg >= 80:
+#               return "B"
+#           if avg >= 70:
+#               return "C"
+#           if avg >= 60:
+#               return "D"
 #           return "F"
+#
+# EXERCISE 3
+#   # inside the BankAccount class:
+#   def transfer_to(self, other, amount):
+#       self.withdraw(amount)          # raises if there isn't enough - good
+#       other.deposit(amount)
+#       return self.balance
+#   # then:
+#   sidd_account.transfer_to(ana_account, 50)
+#   print(sidd_account.balance, ana_account.balance)
+#   Note: withdraw runs FIRST. If it fails, nothing has been deposited - so
+#   money can never appear from nowhere.
 #
 # EXERCISE 4
 #   class Duration:
 #       def __init__(self, seconds):
 #           self.seconds = int(seconds)
 #       def __str__(self):
-#           h, rest = divmod(self.seconds, 3600)
-#           m, s = divmod(rest, 60)
-#           return f"{h}h {m}m {s}s"
+#           hours = self.seconds // 3600
+#           minutes = (self.seconds % 3600) // 60
+#           secs = self.seconds % 60
+#           return f"{hours}h {minutes}m {secs}s"
 #       def __repr__(self):
 #           return f"Duration({self.seconds})"
 #       def __add__(self, other):
@@ -756,13 +923,14 @@ print()
 #           return self.seconds < other.seconds
 #       def __eq__(self, other):
 #           return self.seconds == other.seconds
+#   print(sorted([Duration(3723), Duration(60), Duration(600)]))
 #
 # EXERCISE 5
 #   class Item:
 #       def __init__(self, name, unit_price, quantity=0):
 #           self.name = name
 #           self.unit_price = unit_price
-#           self.quantity = quantity          # goes through the setter
+#           self.quantity = quantity          # goes through the setter below
 #       @property
 #       def quantity(self):
 #           return self._quantity
@@ -781,12 +949,16 @@ print()
 #       SUITS = ["♠", "♥", "♦", "♣"]
 #       RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]
 #       def __init__(self, rank, suit):
-#           self.rank, self.suit = rank, suit
+#           self.rank = rank
+#           self.suit = suit
 #       def __repr__(self):
 #           return f"{self.rank}{self.suit}"
 #   class Deck:
 #       def __init__(self):
-#           self.cards = [Card(r, s) for s in Card.SUITS for r in Card.RANKS]
+#           self.cards = []
+#           for suit in Card.SUITS:
+#               for rank in Card.RANKS:
+#                   self.cards.append(Card(rank, suit))
 #       def __len__(self):
 #           return len(self.cards)
 #       def __iter__(self):
@@ -795,7 +967,8 @@ print()
 #           random.shuffle(self.cards)
 #           return self
 #       def deal(self, n):
-#           dealt, self.cards = self.cards[:n], self.cards[n:]
+#           dealt = self.cards[:n]           # the first n cards...
+#           self.cards = self.cards[n:]      # ...are removed from the deck
 #           return dealt
 
 
